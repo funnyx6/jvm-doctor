@@ -27,9 +27,10 @@ public class MetricsCollector {
     /**
      * 采集当前所有指标
      * 
+     * @param includeCustom 是否包含自定义指标
      * @return 指标 Map
      */
-    public Map<String, Object> collect() {
+    public Map<String, Object> collect(boolean includeCustom) {
         Map<String, Object> metrics = new HashMap<>();
         
         // 内存指标
@@ -76,7 +77,20 @@ public class MetricsCollector {
         // 运行时信息
         metrics.put("uptime", runtimeMXBean.getUptime());
         
+        // 自定义指标
+        if (includeCustom) {
+            Map<String, Object> customMetrics = GlobalCollectors.collectAll();
+            metrics.putAll(customMetrics);
+        }
+        
         return metrics;
+    }
+    
+    /**
+     * 采集当前所有指标（包含自定义指标）
+     */
+    public Map<String, Object> collect() {
+        return collect(true);
     }
     
     /**

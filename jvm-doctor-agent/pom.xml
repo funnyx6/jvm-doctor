@@ -40,6 +40,7 @@
     
     <build>
         <plugins>
+            <!-- Agent JAR（用于 -javaagent 方式） -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -54,6 +55,30 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
+            </plugin>
+            
+            <!-- 可执行 JAR（用于 --attach 方式） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.github.funnyx6.jvmdoctor.agent.AttachTool</mainClass>
+                                </transformer>
+                            </transformers>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <outputFile>target/jvm-doctor-agent-attach.jar</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
