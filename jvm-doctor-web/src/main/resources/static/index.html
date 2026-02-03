@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JVM Doctor - 监控平台</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/lib/vue.global.prod.js"></script>
+    <script src="/lib/chart.umd.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="header-left">
+                <h1>🐾 JVM Doctor</h1>
+                <span class="subtitle">JVM 监控平台</span>
+            </div>
+            <div class="header-right">
+                <span class="connection-status" :class="wsConnected ? 'online' : 'offline'">
+                    {{ wsConnected ? '● 在线' : '○ 离线' }}
+                </span>
+                <span class="time">{{ currentTime }}</span>
+            </div>
+        </header>
+        
+        <main class="main">
+            <!-- 应用列表 -->
+            <section class="section apps-section">
+                <div class="section-header">
+                    <h2>应用列表</h2>
+                    <span class="badge">{{ runningApps.length }} 个运行中</span>
+                </div>
+                <div class="apps-grid">
+                    <div v-for="app in apps" :key="app.id" 
+                         class="app-card" 
+                         :class="{ active: selectedAppId === app.id }"
+                         @click="selectApp(app)">
+                        <div class="app-status" :class="app.status"></div>
+                        <div class="app-info">
+                            <h3>{{ app.appName }}</h3>
+                            <p>{{ app.host }}:{{ app.port }}</p>
+                            <p class="app-meta">{{ app.jvmName }} | {{ formatUptime(app.startTime) }}</p>
+                        </div>
+                        <div class="app-metrics">
+                            <div class="metric">
+                                <span class="label">堆内存</span>
+                                <span class="value">{{ getAppMetric(app.id, 'heapUsage') }}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">线程</span>
+                                <span class="value">{{ getAppMetric(app.id, 'threadCount') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="apps.length === 0" class="empty-state">
+                        <p>暂无注册的应用</p>
+                        <p class="hint">启动 jvm-doctor-agent 即可自动注册</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 详情面板 -->
+            <section class="section detail-section" v-if="selectedApp">
+                <div class="section-header">
+                    <h2>{{ selectedApp.appName }}</h2>
+                    <button class="btn-close" @click="selectedAppId = null">×</button>
+                </div>
+                
+                <!-- 实时图表 -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>堆内存使用率</h3>
+                        <canvas id="heapChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>CPU 使用率</h3>
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>线程数</h3>
+                        <canvas id="threadChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>GC 次数</h3>
+                        <canvas id="gcChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 实时指标 -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h4>堆内存</h4>
+                        <div class="metric-value">
+                            {{ formatBytes(currentMetrics.heapUsed) }} / {{ formatBytes(currentMetrics.heapMax) }}
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" :style="{ width: (currentMetrics.heapUsage * 100) + '%' }"
+                                 :class="getUsageClass(currentMetrics.heapUsage)"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>非堆内存</h4>
+                        <div class="metric-value">{{ formatBytes(currentMetrics.nonheapUsed) }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>线程数</h4>
+                        <div class="metric-value">{{ currentMetrics.threadCount }}</div>
+                        <div class="metric-sub">{{ currentMetrics.daemonThreadCount }} 守护线程</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>CPU 使用率</h4>
+                        <div class="metric-value">{{ (currentMetrics.cpuUsage * 100).toFixed(1) }}%</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>系统负载</h4>
+                        <div class="metric-value">{{ currentMetrics.systemLoad?.toFixed(2) || '-' }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>运行时长</h4>
+                        <div class="metric-value">{{ formatDuration(currentMetrics.uptime) }}</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 告警面板 -->
+            <section class="section alerts-section">
+                <div class="section-header">
+                    <h2>告警中心</h2>
+                    <span class="badge danger" v-if="unacknowledgedCount > 0">{{ unacknowledgedCount }} 个未处理</span>
+                </div>
+                <div class="alerts-list">
+                    <div v-for="alert in alerts" :key="alert.id" class="alert-item" :class="alert.alertLevel">
+                        <div class="alert-icon">
+                            {{ alert.alertLevel === 'critical' ? '🔴' : alert.alertLevel === 'warning' ? '🟡' : '🔵' }}
+                        </div>
+                        <div class="alert-content">
+                            <div class="alert-title">{{ alert.alertType }}</div>
+                            <div class="alert-msg">{{ alert.alertMsg }}</div>
+                            <div class="alert-meta">
+                                {{ getAppName(alert.appId) }} | {{ formatTime(alert.createdAt) }}
+                            </div>
+                        </div>
+                        <button v-if="!alert.acknowledged" class="btn-ack" @click="acknowledgeAlert(alert.id)">
+                            确认
+                        </button>
+                        <span v-else class="ack-label">已确认</span>
+                    </div>
+                    <div v-if="alerts.length === 0" class="empty-state">
+                        <p>暂无告警</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="/js/app.js"></script>
+</body>
+</html>

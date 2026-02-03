@@ -51,11 +51,11 @@ public class JvmDoctorCli implements Callable<Integer> {
             
             JvmMonitor monitor = new JvmMonitor();
             ObjectMapper mapper = new ObjectMapper();
-            FileWriter writer = null;
+            final FileWriter[] writerRef = new FileWriter[1];
             
             if (outputFile != null) {
-                writer = new FileWriter(outputFile);
-                writer.write("[\n");
+                writerRef[0] = new FileWriter(outputFile);
+                writerRef[0].write("[\n");
             }
             
             monitor.startMonitoring(interval);
@@ -63,10 +63,10 @@ public class JvmDoctorCli implements Callable<Integer> {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("\nStopping monitoring...");
                 monitor.stopMonitoring();
-                if (writer != null) {
+                if (writerRef[0] != null) {
                     try {
-                        writer.write("\n]");
-                        writer.close();
+                        writerRef[0].write("\n]");
+                        writerRef[0].close();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -104,14 +104,14 @@ public class JvmDoctorCli implements Callable<Integer> {
                     }
                     
                     // 写入输出文件
-                    if (writer != null) {
+                    if (writerRef[0] != null) {
                         if (count > 0) {
-                            writer.write(",\n");
+                            writerRef[0].write(",\n");
                         }
                         ObjectNode metrics = mapper.createObjectNode();
                         metrics.put("timestamp", System.currentTimeMillis());
                         metrics.set("data", monitor.generateDiagnosticReport());
-                        writer.write(mapper.writeValueAsString(metrics));
+                        writerRef[0].write(mapper.writeValueAsString(metrics));
                     }
                     
                     count++;

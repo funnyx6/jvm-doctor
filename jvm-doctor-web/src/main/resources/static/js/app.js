@@ -1,0 +1,370 @@
+const { createApp, ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } = Vue;
+
+const app = createApp({
+    setup() {
+        // 状态
+        const apps = ref([]);
+        const alerts = ref([]);
+        const selectedAppId = ref(null);
+        const wsConnected = ref(false);
+        const currentTime = ref('');
+        let ws = null;
+        let charts = {};
+        let metricsHistory = {};
+        
+        // 当前选中应用的实时指标
+        const currentMetrics = reactive({
+            heapUsed: 0,
+            heapMax: 0,
+            heapUsage: 0,
+            nonheapUsed: 0,
+            threadCount: 0,
+            daemonThreadCount: 0,
+            cpuUsage: 0,
+            systemLoad: 0,
+            uptime: 0,
+            gcCount: 0,
+            gcTime: 0
+        });
+        
+        // 计算属性
+        const runningApps = computed(() => apps.value.filter(a => a.status === 'running'));
+        const unacknowledgedCount = computed(() => alerts.value.filter(a => !a.acknowledged).length);
+        const selectedApp = computed(() => apps.value.find(a => a.id === selectedAppId.value));
+        
+        // 获取应用名称
+        const getAppName = (appId) => {
+            const app = apps.value.find(a => a.id === appId);
+            return app ? app.appName : `App #${appId}`;
+        };
+        
+        // 获取应用的最新指标
+        const getAppMetric = (appId, metric) => {
+            const history = metricsHistory[appId] || [];
+            if (history.length === 0) return '-';
+            const latest = history[history.length - 1];
+            switch (metric) {
+                case 'heapUsage':
+                    return latest.heapUsage ? `${(latest.heapUsage * 100).toFixed(1)}%` : '-';
+                case 'threadCount':
+                    return latest.threadCount || '-';
+                default:
+                    return '-';
+            }
+        };
+        
+        // 选择应用
+        const selectApp = async (app) => {
+            selectedAppId.value = app.id;
+            await nextTick();
+            initCharts();
+            await loadMetricsHistory(app.id);
+        };
+        
+        // 确认告警
+        const acknowledgeAlert = async (alertId) => {
+            try {
+                await fetch(`/api/alerts/${alertId}/acknowledge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ acknowledgedBy: 'dashboard' })
+                });
+                loadAlerts();
+            } catch (e) {
+                console.error('Failed to acknowledge alert:', e);
+            }
+        };
+        
+        // 格式化字节
+        const formatBytes = (bytes) => {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        };
+        
+        // 格式化时长
+        const formatDuration = (ms) => {
+            if (!ms) return '-';
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            if (days > 0) return `${days}d ${hours % 24}h`;
+            if (hours > 0) return `${hours}h ${minutes % 60}m`;
+            if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+            return `${seconds}s`;
+        };
+        
+        // 格式化时间
+        const formatTime = (timestamp) => {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+            return date.toLocaleString();
+        };
+        
+        // 格式化启动时间
+        const formatUptime = (startTime) => {
+            if (!startTime) return '-';
+            return formatDuration(Date.now() - startTime);
+        };
+        
+        // 获取使用率样式类
+        const getUsageClass = (usage) => {
+            if (!usage) return 'normal';
+            if (usage >= 0.9) return 'danger';
+            if (usage >= 0.7) return 'warning';
+            return 'normal';
+        };
+        
+        // 加载应用列表
+        const loadApps = async () => {
+            try {
+                const res = await fetch('/api/apps');
+                apps.value = await res.json();
+            } catch (e) {
+                console.error('Failed to load apps:', e);
+            }
+        };
+        
+        // 加载告警列表
+        const loadAlerts = async () => {
+            try {
+                const res = await fetch('/api/alerts');
+                alerts.value = await res.json();
+            } catch (e) {
+                console.error('Failed to load alerts:', e);
+            }
+        };
+        
+        // 加载指标历史
+        const loadMetricsHistory = async (appId) => {
+            try {
+                const since = Date.now() - 3600000; // 最近1小时
+                const res = await fetch(`/api/metrics/${appId}/history?since=${since}`);
+                const data = await res.json();
+                metricsHistory[appId] = data;
+                updateCharts(data);
+            } catch (e) {
+                console.error('Failed to load metrics history:', e);
+            }
+        };
+        
+        // 更新图表
+        const updateCharts = (data) => {
+            if (!data || data.length === 0) return;
+            
+            const labels = data.map(m => new Date(m.timestamp).toLocaleTimeString());
+            const heapData = data.map(m => m.heapUsage ? m.heapUsage * 100 : 0);
+            const cpuData = data.map(m => m.cpuUsage ? m.cpuUsage * 100 : 0);
+            const threadData = data.map(m => m.threadCount || 0);
+            const gcData = data.map(m => m.gcCount || 0);
+            
+            if (charts.heap) {
+                charts.heap.data.labels = labels;
+                charts.heap.data.datasets[0].data = heapData;
+                charts.heap.update('none');
+            }
+            if (charts.cpu) {
+                charts.cpu.data.labels = labels;
+                charts.cpu.data.datasets[0].data = cpuData;
+                charts.cpu.update('none');
+            }
+            if (charts.thread) {
+                charts.thread.data.labels = labels;
+                charts.thread.data.datasets[0].data = threadData;
+                charts.thread.update('none');
+            }
+            if (charts.gc) {
+                charts.gc.data.labels = labels;
+                charts.gc.data.datasets[0].data = gcData;
+                charts.gc.update('none');
+            }
+        };
+        
+        // 初始化图表
+        const initCharts = () => {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        display: false,
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' }
+                    }
+                },
+                elements: {
+                    point: { radius: 0 },
+                    line: { tension: 0.4 }
+                },
+                animation: { duration: 0 }
+            };
+            
+            ['heap', 'cpu', 'thread', 'gc'].forEach(type => {
+                const canvas = document.getElementById(`${type}Chart`);
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                const color = {
+                    heap: { bg: 'rgba(59, 130, 246, 0.2)', border: '#3b82f6' },
+                    cpu: { bg: 'rgba(239, 68, 68, 0.2)', border: '#ef4444' },
+                    thread: { bg: 'rgba(16, 185, 129, 0.2)', border: '#10b981' },
+                    gc: { bg: 'rgba(245, 158, 11, 0.2)', border: '#f59e0b' }
+                }[type];
+                
+                if (charts[type]) {
+                    charts[type].destroy();
+                }
+                
+                charts[type] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: color.bg,
+                            borderColor: color.border,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: chartOptions
+                });
+            });
+        };
+        
+        // 连接 WebSocket
+        const connectWebSocket = () => {
+            ws = new WebSocket(`ws://${window.location.host}/ws/metrics`);
+            
+            ws.onopen = () => {
+                wsConnected.value = true;
+                console.log('WebSocket connected');
+            };
+            
+            ws.onclose = () => {
+                wsConnected.value = false;
+                console.log('WebSocket disconnected, reconnecting...');
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = (err) => {
+                console.error('WebSocket error:', err);
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                } catch (e) {
+                    console.error('Failed to parse WebSocket message:', e);
+                }
+            };
+        };
+        
+        // 处理 WebSocket 消息
+        const handleWebSocketMessage = (data) => {
+            if (data.type === 'metrics') {
+                const appId = data.appId;
+                
+                // 更新历史数据
+                if (!metricsHistory[appId]) {
+                    metricsHistory[appId] = [];
+                }
+                metricsHistory[appId].push({
+                    timestamp: data.timestamp,
+                    heapUsed: data.heapUsed,
+                    heapMax: data.heapMax,
+                    heapUsage: data.heapUsage,
+                    threadCount: data.threadCount,
+                    cpuUsage: data.cpuUsage,
+                    gcCount: data.gcCount
+                });
+                
+                // 只保留最近1小时数据
+                const cutoff = Date.now() - 3600000;
+                metricsHistory[appId] = metricsHistory[appId].filter(m => m.timestamp > cutoff);
+                
+                // 如果是当前选中的应用，更新实时指标
+                if (appId === selectedAppId.value) {
+                    Object.assign(currentMetrics, {
+                        heapUsed: data.heapUsed,
+                        heapMax: data.heapMax,
+                        heapUsage: data.heapUsage,
+                        threadCount: data.threadCount,
+                        cpuUsage: data.cpuUsage,
+                        gcCount: data.gcCount
+                    });
+                    updateCharts(metricsHistory[appId]);
+                }
+            } else if (data.type === 'alert') {
+                loadAlerts();
+            }
+        };
+        
+        // 更新时间
+        const updateTime = () => {
+            const now = new Date();
+            currentTime.value = now.toLocaleString();
+        };
+        
+        // 定时任务
+        let timeInterval;
+        
+        onMounted(() => {
+            loadApps();
+            loadAlerts();
+            connectWebSocket();
+            updateTime();
+            timeInterval = setInterval(updateTime, 1000);
+        });
+        
+        onUnmounted(() => {
+            if (ws) ws.close();
+            if (timeInterval) clearInterval(timeInterval);
+            Object.values(charts).forEach(chart => chart?.destroy());
+        });
+        
+        // 监听应用列表变化，重新加载指标历史
+        watch(selectedAppId, (newId) => {
+            if (newId) {
+                loadMetricsHistory(newId);
+            }
+        });
+        
+        return {
+            apps,
+            alerts,
+            selectedAppId,
+            selectedApp,
+            runningApps,
+            unacknowledgedCount,
+            currentMetrics,
+            wsConnected,
+            currentTime,
+            getAppName,
+            getAppMetric,
+            selectApp,
+            acknowledgeAlert,
+            formatBytes,
+            formatDuration,
+            formatTime,
+            formatUptime,
+            getUsageClass
+        };
+    }
+});
+
+app.mount('#app');

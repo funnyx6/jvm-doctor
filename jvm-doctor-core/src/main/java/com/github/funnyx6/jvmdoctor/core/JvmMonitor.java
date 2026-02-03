@@ -85,7 +85,7 @@ public class JvmMonitor {
     /**
      * 收集 JVM 指标
      */
-    private void collectMetrics() {
+    public void collectMetrics() {
         Map<String, Object> metrics = new HashMap<>();
         
         // 内存指标
