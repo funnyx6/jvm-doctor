@@ -14,7 +14,7 @@
 ## 快速开始
 
 ### 前提条件
-- Java 11 或更高版本
+- Java 8 或更高版本
 - Maven 3.6+
 
 ### 安装
@@ -53,12 +53,13 @@ jvm-doctor/
 ```
 
 ## 技术栈
-- **Java 17** - 主开发语言
+- **Java 8** - 主开发语言
 - **Maven** - 构建工具
+- **Spring Boot 2.5.4** - Web 框架
 - **JVM TI** - JVM 工具接口
-- **Micrometer** - 指标收集
-- **Picocli** - 命令行解析
-- **Jackson** - JSON 处理
+- **Micrometer 1.7.10** - 指标收集
+- **Picocli 4.7.5** - 命令行解析
+- **Jackson 2.12.5** - JSON 处理
 
 ## 贡献指南
 欢迎提交 Issue 和 Pull Request！
