@@ -1,68 +1,318 @@
 # JVM Doctor
 
-一个强大的 JVM 诊断和监控工具，用于分析和优化 Java 应用程序性能。
+一个强大的 JVM 诊断和监控平台，支持本地诊断和分布式监控两种模式。
 
 ## 功能特性
 
+### 本地诊断模式（CLI）
 - 🔍 **实时监控**：监控 JVM 内存、GC、线程、CPU 使用情况
 - 📊 **性能分析**：分析热点方法、内存泄漏、锁竞争
 - 🚨 **异常检测**：自动检测 OOM、死锁、CPU 飙高等问题
-- 📈 **可视化报告**：生成 HTML/PDF 格式的诊断报告
-- 🔧 **调优建议**：基于分析结果提供 JVM 参数调优建议
-- 🐳 **容器支持**：支持 Docker/Kubernetes 环境下的 JVM 诊断
+- 📈 **可视化报告**：生成 HTML/JSON/TEXT 格式的诊断报告
+
+### 分布式监控模式（Server + Agent）
+- 🌐 **应用注册**：自动注册目标 JVM 应用
+- 📡 **实时采集**：定时采集并上报 JVM 指标
+- 📊 **可视化仪表盘**：Vue.js 构建的实时监控界面
+- 🚨 **告警系统**：堆内存、CPU、GC 等阈值告警
+- 🔄 **WebSocket 实时推送**：指标和告警实时更新
+
+## 架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      JVM Doctor Server                       │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Spring Boot + SQLite + WebSocket                     │  │
+│  │  - 应用注册/心跳                                       │  │
+│  │  - 指标接收存储                                        │  │
+│  │  - 告警检测                                            │  │
+│  │  - REST API + WebSocket                               │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Vue.js Dashboard                                     │  │
+│  │  - 应用列表                                            │  │
+│  │  - 实时图表                                            │  │
+│  │  - 告警中心                                            │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                          ↑ HTTP/WebSocket
+┌─────────────────────────────────────────────────────────────┐
+│                      Target Applications                     │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  java -javaagent:jvm-doctor-agent.jar -jar app.jar    │  │
+│  │  - 自动注册                                            │  │
+│  │  - 指标上报                                            │  │
+│  │  - 心跳保活                                            │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## 快速开始
 
 ### 前提条件
-- Java 8 或更高版本
+- Java 8+
 - Maven 3.6+
 
-### 安装
+### 构建项目
 ```bash
-# 克隆项目
 git clone https://github.com/funnyx6/jvm-doctor.git
 cd jvm-doctor
-
-# 构建项目
-mvn clean package
-
-# 运行
-java -jar target/jvm-doctor-1.0.0.jar
+mvn clean package -DskipTests
 ```
 
-### 使用示例
+---
+
+## 模式一：本地诊断（CLI）
+
+### 运行诊断
 ```bash
 # 监控本地 Java 进程
-jvm-doctor monitor --pid 12345
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor --pid 12345
 
 # 分析堆转储文件
-jvm-doctor analyze --heap-dump heapdump.hprof
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze --heap-dump heapdump.hprof
 
 # 生成诊断报告
-jvm-doctor report --output report.html
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze -o report.html
+
+# 查看帮助
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar --help
 ```
+
+---
+
+## 模式二：分布式监控（Server + Agent）
+
+### 1. 启动 Server
+
+```bash
+# 启动 Web 服务（默认端口 8080）
+java -jar jvm-doctor-web/target/jvm-doctor-web-1.0.0.jar
+
+# 或指定端口
+java -jar jvm-doctor-web/target/jvm-doctor-web-1.0.0.jar --server.port=9000
+```
+
+访问控制台：http://localhost:8080
+
+### 2. 配置目标应用
+
+**方式一：启动参数（推荐）**
+```bash
+java -javaagent:jvm-doctor-agent.jar -jar your-app.jar
+```
+
+**方式二：自定义 Server 地址**
+```bash
+java -javaagent:jvm-doctor-agent.jar=server.url=http://localhost:8080 -jar your-app.jar
+```
+
+**方式三：系统属性**
+```bash
+java -Djvm-doctor.server.url=http://localhost:8080 \
+     -Djvm-doctor.report.interval=10 \
+     -javaagent:jvm-doctor-agent.jar \
+     -jar your-app.jar
+```
+
+**方式四：配置文件**
+```bash
+# 创建 jvm-doctor-agent.properties
+echo "server.url=http://localhost:8080" > jvm-doctor-agent.properties
+echo "report.interval=10" >> jvm-doctor-agent.properties
+
+java -javaagent:jvm-doctor-agent.jar -jar your-app.jar
+```
+
+### 3. 配置参数说明
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `server.url` | Server 地址 | `http://localhost:8080` |
+| `report.interval` | 上报间隔（秒） | `30` |
+| `app.name` | 应用名称 | 自动检测 |
+| `app.host` | 主机地址 | 自动检测 |
+
+### 4. 动态挂载（可选）
+
+如果无法重启应用，可以使用 attach 方式动态挂载：
+
+```bash
+java -jar jvm-doctor-agent/target/jvm-doctor-agent-1.0.0.jar --pid 12345
+```
+
+> 注：动态挂载需要目标 JVM 开启 `-Djdk.attach.allowAttachSelf=true`
+
+---
+
+## API 文档
+
+### 应用注册
+
+**注册应用**
+```http
+POST /api/apps/register
+Content-Type: application/json
+
+{
+  "appName": "my-service",
+  "host": "192.168.1.100",
+  "port": 8080,
+  "jvmName": "OpenJDK 1.8.0_392",
+  "jvmVersion": "1.8.0_392",
+  "startTime": 1738588800000
+}
+```
+
+**响应**
+```json
+{
+  "appId": 1,
+  "status": "running",
+  "message": "App registered successfully",
+  "serverTime": 1738588800000
+}
+```
+
+**心跳**
+```http
+POST /api/apps/{appId}/heartbeat
+```
+
+**下线**
+```http
+POST /api/apps/{appId}/offline
+```
+
+### 指标
+
+**上报指标**
+```http
+POST /api/metrics
+Content-Type: application/json
+
+{
+  "appId": 1,
+  "metrics": {
+    "heap.used": 123456789,
+    "heap.max": 536870912,
+    "heap.usage": 0.23,
+    "gc.count": 150,
+    "gc.time": 5000,
+    "thread.count": 42,
+    "cpu.usage": 0.25,
+    "uptime": 3600000
+  }
+}
+```
+
+**获取最新指标**
+```http
+GET /api/metrics/{appId}/latest
+```
+
+**获取指标历史**
+```http
+GET /api/metrics/{appId}/history?since=timestamp
+```
+
+### 告警
+
+**获取告警列表**
+```http
+GET /api/alerts
+GET /api/alerts/unacknowledged
+```
+
+**确认告警**
+```http
+POST /api/alerts/{alertId}/acknowledge
+Content-Type: application/json
+
+{
+  "acknowledgedBy": "admin"
+}
+```
+
+### 健康检查
+```http
+GET /api/health
+GET /api/info
+```
+
+### WebSocket
+
+**连接**
+```bash
+ws://localhost:8080/ws/metrics
+```
+
+**订阅特定应用**
+```bash
+ws://localhost:8080/ws/metrics?appId=1
+```
+
+**消息格式**
+
+指标推送：
+```json
+{
+  "type": "metrics",
+  "appId": 1,
+  "timestamp": 1738588800000,
+  "heapUsed": 123456789,
+  "heapMax": 536870912,
+  "heapUsage": 0.23,
+  "threadCount": 42,
+  "cpuUsage": 0.25
+}
+```
+
+告警推送：
+```json
+{
+  "type": "alert",
+  "alertId": 1,
+  "appId": 1,
+  "alertType": "high_heap_usage",
+  "alertMsg": "Heap usage: 92.5%",
+  "alertLevel": "warning",
+  "createdAt": 1738588800000
+}
+```
+
+---
 
 ## 项目结构
+
 ```
 jvm-doctor/
-├── jvm-doctor-core/     # 核心模块
-├── jvm-doctor-agent/    # Java Agent 模块
-├── jvm-doctor-cli/      # 命令行接口
-├── jvm-doctor-web/      # Web 管理界面
-└── jvm-doctor-docs/     # 文档
+├── jvm-doctor-core/           # 核心模块（JVM 指标采集）
+├── jvm-doctor-agent/          # Java Agent（部署到目标应用）
+├── jvm-doctor-cli/            # 命令行工具（本地诊断）
+├── jvm-doctor-web/            # Web 服务 + Dashboard
+└── pom.xml                    # 父 POM
 ```
 
+---
+
 ## 技术栈
-- **Java 8** - 主开发语言
+
+- **Java 8** - 开发语言
 - **Maven** - 构建工具
 - **Spring Boot 2.5.4** - Web 框架
-- **JVM TI** - JVM 工具接口
-- **Micrometer 1.7.10** - 指标收集
-- **Picocli 4.7.5** - 命令行解析
-- **Jackson 2.12.5** - JSON 处理
+- **SQLite** - 轻量数据库
+- **Vue.js 3** - 前端框架
+- **Chart.js** - 图表库
+- **Picocli 4.7.5** - CLI 框架
+
+---
 
 ## 贡献指南
+
 欢迎提交 Issue 和 Pull Request！
 
 ## 许可证
+
 MIT License
