@@ -246,7 +246,14 @@ public class JvmMonitor {
                 suggestionsNode.put("deadlock", 
                     "Analyze thread dumps to identify and fix deadlocks");
             }
-            if (issues.keySet().stream().anyMatch(k -> k.startsWith("high_gc_time"))) {
+            boolean hasGcIssues = false;
+            for (String key : issues.keySet()) {
+                if (key.startsWith("high_gc_time")) {
+                    hasGcIssues = true;
+                    break;
+                }
+            }
+            if (hasGcIssues) {
                 suggestionsNode.put("gc", 
                     "Consider tuning GC parameters or optimizing object creation patterns");
             }
