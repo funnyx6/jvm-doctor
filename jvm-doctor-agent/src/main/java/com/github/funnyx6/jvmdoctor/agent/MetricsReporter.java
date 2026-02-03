@@ -179,11 +179,11 @@ public class MetricsReporter {
         
         // 注册关闭钩子
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            stop();
+            shutdown();
         }));
     }
     
-    public static synchronized void stop() {
+    public static synchronized void shutdown() {
         if (instance != null) {
             instance.stop();
             instance = null;
