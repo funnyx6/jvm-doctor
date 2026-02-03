@@ -138,8 +138,17 @@ java -javaagent:jvm-doctor-agent.jar -jar your-app.jar
 
 如果无法重启应用，可以使用 attach 方式动态挂载：
 
+**方式一：列出所有 Java 进程**
 ```bash
-java -jar jvm-doctor-agent/target/jvm-doctor-agent-1.0.0.jar --pid 12345
+java -jar jvm-doctor-agent/target/jvm-doctor-agent-attach.jar --list
+```
+
+**方式二：附加到指定进程**
+```bash
+java -jar jvm-doctor-agent/target/jvm-doctor-agent-attach.jar --pid 12345
+
+# 或指定 Server 地址和上报间隔
+java -jar jvm-doctor-agent/target/jvm-doctor-agent-attach.jar --pid 12345 --url http://localhost:8080 --interval 10
 ```
 
 > 注：动态挂载需要目标 JVM 开启 `-Djdk.attach.allowAttachSelf=true`
