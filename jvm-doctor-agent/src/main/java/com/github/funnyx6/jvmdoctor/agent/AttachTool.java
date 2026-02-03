@@ -91,17 +91,12 @@ public class AttachTool {
         System.out.println("Java Processes:");
         System.out.println("---------------");
         
-        try {
-            List<VirtualMachineDescriptor> vms = VirtualMachine.list();
-            for (VirtualMachineDescriptor vm : vms) {
-                System.out.printf("  %-8s %s%n", vm.id(), vm.displayName());
-            }
-            if (vms.isEmpty()) {
-                System.out.println("  (no Java processes found)");
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to list JVMs: " + e.getMessage());
-            System.exit(1);
+        List<VirtualMachineDescriptor> vms = VirtualMachine.list();
+        for (VirtualMachineDescriptor vm : vms) {
+            System.out.printf("  %-8s %s%n", vm.id(), vm.displayName());
+        }
+        if (vms.isEmpty()) {
+            System.out.println("  (no Java processes found)");
         }
     }
     

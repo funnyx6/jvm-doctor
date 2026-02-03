@@ -57,7 +57,7 @@
                 </configuration>
             </plugin>
             
-            <!-- 可执行 JAR（用于 --attach 方式） -->
+            <!-- 可执行 JAR（用于 attach 方式） -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
