@@ -19,7 +19,7 @@ public interface AppMetricsRepository extends JpaRepository<AppMetrics, Long> {
             @Param("appId") Long appId, 
             @Param("startTime") Long startTime);
     
-    @Query("SELECT m FROM AppMetrics m WHERE m.appId = :appId ORDER BY m.timestamp DESC LIMIT 1")
+    @Query(value = "SELECT * FROM app_metrics m WHERE m.app_id = :appId ORDER BY m.timestamp DESC LIMIT 1", nativeQuery = true)
     AppMetrics findLatestByAppId(@Param("appId") Long appId);
     
     @Query("SELECT m FROM AppMetrics m WHERE m.timestamp >= :startTime ORDER BY m.timestamp ASC")
