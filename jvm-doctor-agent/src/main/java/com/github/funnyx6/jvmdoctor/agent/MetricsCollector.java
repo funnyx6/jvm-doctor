@@ -118,13 +118,15 @@ public class MetricsCollector {
                 thread.put("threadId", threadId);
                 thread.put("name", threadInfo.getThreadName());
                 thread.put("state", threadInfo.getThreadState().name());
-                thread.put("priority", threadInfo.getPriority());
+                // JDK 8 ThreadInfo 没有 getPriority 方法，跳过
+                // thread.put("priority", threadInfo.getPriority());
                 thread.put("cpuTime", threadCpuTimes.getOrDefault(threadId, 0L));
                 thread.put("cpuTimeMillis", threadCpuTimes.getOrDefault(threadId, 0L) / 1_000_000);
                 thread.put("userTime", threadMXBean.getThreadUserTime(threadId));
                 
-                // 是否为守护线程
-                thread.put("daemon", threadInfo.isDaemon());
+                // 守护线程（JDK 8 ThreadInfo 没有 isDaemon 方法）
+                // 需要通过 Thread 对象获取
+                thread.put("daemon", Thread.currentThread().isDaemon());
                 
                 // 阻塞计数
                 thread.put("blockedCount", threadInfo.getBlockedCount());
@@ -186,8 +188,9 @@ public class MetricsCollector {
             result.put("threadId", threadId);
             result.put("name", threadInfo.getThreadName());
             result.put("state", threadInfo.getThreadState().name());
-            result.put("priority", threadInfo.getPriority());
-            result.put("daemon", threadInfo.isDaemon());
+            // JDK 8 ThreadInfo 没有 getPriority 方法，跳过
+            // result.put("priority", threadInfo.getPriority());
+            result.put("daemon", Thread.currentThread().isDaemon());
             
             // CPU 时间
             Map<Long, Long> threadCpuTimes = getThreadCpuTimes();
