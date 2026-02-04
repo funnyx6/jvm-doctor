@@ -543,6 +543,7 @@ const app = createApp({
         
         // 定时任务
         let timeInterval;
+        let keyHandler;
         
         onMounted(() => {
             applyTheme();
@@ -551,11 +552,21 @@ const app = createApp({
             connectWebSocket();
             updateTime();
             timeInterval = setInterval(updateTime, 1000);
+            
+            // ESC 键关闭弹窗
+            keyHandler = (e) => {
+                if (e.key === 'Escape') {
+                    showRegisterModal.value = false;
+                    showDrawer.value = false;
+                }
+            };
+            document.addEventListener('keydown', keyHandler);
         });
         
         onUnmounted(() => {
             if (ws) ws.close();
             if (timeInterval) clearInterval(timeInterval);
+            document.removeEventListener('keydown', keyHandler);
             Object.values(charts).forEach(chart => chart?.destroy());
         });
         

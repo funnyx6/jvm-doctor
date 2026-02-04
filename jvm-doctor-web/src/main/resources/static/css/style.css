@@ -1010,15 +1010,16 @@ body.dark-mode .btn-default:hover {
     background: rgba(0, 0, 0, 0.5);
     z-index: 2000;
     animation: fadeIn 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
     width: 480px;
     max-width: 90vw;
+    max-height: 90vh;
     background: white;
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
