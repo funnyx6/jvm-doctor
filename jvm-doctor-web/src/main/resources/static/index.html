@@ -32,6 +32,7 @@
                 <div class="section-header">
                     <h2>应用列表</h2>
                     <span class="badge">{{ runningApps.length }} 个运行中</span>
+                    <button class="btn-primary" @click="showRegisterModal = true">+ 手动注册</button>
                 </div>
                 <div class="apps-grid">
                     <div v-for="app in apps" :key="app.id" 
@@ -43,6 +44,10 @@
                             <h3>{{ app.appName }}</h3>
                             <p>{{ app.host }}:{{ app.port }}</p>
                             <p class="app-meta">{{ app.jvmName }} | {{ formatUptime(app.startTime) }}</p>
+                        </div>
+                        <div class="app-actions">
+                            <button class="btn-sm btn-danger" @click.stop="offlineApp(app)" v-if="app.status === 'running'">下线</button>
+                            <button class="btn-sm btn-primary" @click.stop="heartbeatApp(app)" v-else>恢复</button>
                         </div>
                         <div class="app-metrics">
                             <div class="metric">
@@ -286,6 +291,52 @@
                 </div>
             </section>
         </main>
+    </div>
+    
+    <!-- 手动注册弹窗 -->
+    <div class="modal-overlay" v-if="showRegisterModal" @click="showRegisterModal = false">
+        <div class="modal" @click.stop>
+            <div class="modal-header">
+                <h3>手动注册应用</h3>
+                <button class="btn-close" @click="showRegisterModal = false">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>应用名称 *</label>
+                    <input type="text" v-model="registerForm.appName" placeholder="输入应用名称">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>主机地址 *</label>
+                        <input type="text" v-model="registerForm.host" placeholder="如：192.168.1.100">
+                    </div>
+                    <div class="form-group">
+                        <label>端口 *</label>
+                        <input type="number" v-model="registerForm.port" placeholder="如：8080">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>JVM 名称</label>
+                        <input type="text" v-model="registerForm.jvmName" placeholder="如：OpenJDK 1.8.0_392">
+                    </div>
+                    <div class="form-group">
+                        <label>JVM 版本</label>
+                        <input type="text" v-model="registerForm.jvmVersion" placeholder="如：1.8.0_392">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>启动时间</label>
+                    <input type="datetime-local" v-model="registerForm.startTime">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-default" @click="showRegisterModal = false">取消</button>
+                <button class="btn-primary" @click="registerApp" :disabled="!registerForm.appName || !registerForm.host || !registerForm.port">
+                    注册
+                </button>
+            </div>
+        </div>
     </div>
     
     <script src="/js/app.js"></script>

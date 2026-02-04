@@ -10,6 +10,18 @@ const app = createApp({
         const currentTime = ref('');
         const darkMode = ref(localStorage.getItem('jvm-doctor-theme') === 'dark');
         const showDrawer = ref(false);
+        const showRegisterModal = ref(false);
+        
+        // 注册表单
+        const registerForm = reactive({
+            appName: '',
+            host: '',
+            port: '',
+            jvmName: '',
+            jvmVersion: '',
+            startTime: ''
+        });
+        
         let ws = null;
         let charts = {};
         let metricsHistory = {};
@@ -128,6 +140,65 @@ const app = createApp({
             
             return list;
         });
+        
+        // 注册应用
+        const registerApp = async () => {
+            try {
+                const startTime = registerForm.startTime 
+                    ? new Date(registerForm.startTime).getTime() 
+                    : Date.now();
+                
+                await fetch('/api/apps/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        appName: registerForm.appName,
+                        host: registerForm.host,
+                        port: parseInt(registerForm.port),
+                        jvmName: registerForm.jvmName,
+                        jvmVersion: registerForm.jvmVersion,
+                        startTime: startTime
+                    })
+                });
+                
+                // 重置表单
+                registerForm.appName = '';
+                registerForm.host = '';
+                registerForm.port = '';
+                registerForm.jvmName = '';
+                registerForm.jvmVersion = '';
+                registerForm.startTime = '';
+                showRegisterModal.value = false;
+                
+                // 刷新列表
+                loadApps();
+            } catch (e) {
+                console.error('Failed to register app:', e);
+                alert('注册失败：' + e.message);
+            }
+        };
+        
+        // 下线应用
+        const offlineApp = async (app) => {
+            if (!confirm(`确定要下线应用 "${app.appName}" 吗？`)) return;
+            
+            try {
+                await fetch(`/api/apps/${app.id}/offline`, { method: 'POST' });
+                loadApps();
+            } catch (e) {
+                console.error('Failed to offline app:', e);
+            }
+        };
+        
+        // 恢复应用心跳
+        const heartbeatApp = async (app) => {
+            try {
+                await fetch(`/api/apps/${app.id}/heartbeat`, { method: 'POST' });
+                loadApps();
+            } catch (e) {
+                console.error('Failed to send heartbeat:', e);
+            }
+        };
         
         // 获取应用名称
         const getAppName = (appId) => {
@@ -507,10 +578,15 @@ const app = createApp({
             currentTime,
             darkMode,
             showDrawer,
+            showRegisterModal,
+            registerForm,
             suggestions,
             getAppName,
             getAppMetric,
             selectApp,
+            registerApp,
+            offlineApp,
+            heartbeatApp,
             acknowledgeAlert,
             formatBytes,
             formatDuration,

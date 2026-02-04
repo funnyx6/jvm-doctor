@@ -902,3 +902,235 @@ body.dark-mode .jvm-params code {
     background: #334155;
     color: #e2e8f0;
 }
+
+/* 按钮样式 */
+.btn-primary {
+    padding: 8px 16px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-default {
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+body.dark-mode .btn-default {
+    background: #334155;
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+.btn-default:hover {
+    background: #f8fafc;
+}
+
+body.dark-mode .btn-default:hover {
+    background: #475569;
+}
+
+.btn-danger {
+    padding: 4px 10px;
+    border: none;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: #fecaca;
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s;
+}
+
+.btn-sm.btn-primary {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.btn-sm.btn-primary:hover {
+    background: #c7d2fe;
+}
+
+.btn-sm.btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-sm.btn-danger:hover {
+    background: #fecaca;
+}
+
+.app-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 480px;
+    max-width: 90vw;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 2001;
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+
+body.dark-mode .modal {
+    background: #1e293b;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.3s;
+}
+
+body.dark-mode .modal-header {
+    border-color: #334155;
+}
+
+.modal-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .modal-header h3 {
+    color: #f1f5f9;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    margin-bottom: 6px;
+    transition: color 0.3s;
+}
+
+body.dark-mode .form-group label {
+    color: #94a3b8;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1a1a2e;
+    transition: all 0.2s;
+}
+
+body.dark-mode .form-group input {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #94a3b8;
+}
+
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    transition: border-color 0.3s;
+}
+
+body.dark-mode .modal-footer {
+    border-color: #334155;
+}
