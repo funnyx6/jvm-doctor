@@ -29,7 +29,7 @@ public class AppRegistryService {
     public AppRegistry register(AppRegistry app) {
         // 检查是否已存在
         Optional<AppRegistry> existing = repository.findByAppNameAndHostAndPort(
-                app.getAppName(), app.getHost(), app.getPort());
+                app.getAppName(), app.getHost(), app.getThreadServerPort());
         
         if (existing.isPresent()) {
             // 更新心跳时间
