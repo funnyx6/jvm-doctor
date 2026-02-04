@@ -43,8 +43,26 @@ public class JvmDoctorCli implements Callable<Integer> {
         private File outputFile;
         
         @Option(names = {"-p", "--pid"}, 
-                description = "Target JVM PID (default: current process)")
-        private Long pid;
+                description = "Target JVM PID",
+                required = false)
+        private String pid;
+        
+        @Option(names = {"--current"}, 
+                description = "Monitor the current JVM process (default behavior)",
+                required = false,
+                hidden = true)
+        private boolean currentProcess;
+        
+        private long getPidValue() {
+            if (pid != null && !pid.trim().isEmpty()) {
+                try {
+                    return Long.parseLong(pid.trim());
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid PID: " + pid);
+                }
+            }
+            return -1; // 默认监控当前进程
+        }
         
         @Override
         public Integer call() throws Exception {
@@ -56,9 +74,10 @@ public class JvmDoctorCli implements Callable<Integer> {
             
             // 如果指定了 PID，连接远程 JVM
             JvmMonitor monitor;
-            if (pid != null && pid > 0) {
-                System.out.println("Target PID: " + pid);
-                monitor = new JvmMonitor(pid);
+            long targetPid = getPidValue();
+            if (targetPid > 0) {
+                System.out.println("Target PID: " + targetPid);
+                monitor = new JvmMonitor(targetPid);
             } else {
                 System.out.println("Target: current process (PID: " + ManagementFactory.getRuntimeMXBean().getName().split("@")[0] + ")");
                 monitor = new JvmMonitor();
