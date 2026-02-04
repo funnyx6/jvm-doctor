@@ -10,22 +10,6 @@ const app = createApp({
         const currentTime = ref('');
         const darkMode = ref(localStorage.getItem('jvm-doctor-theme') === 'dark');
         const showDrawer = ref(false);
-        const showRegisterModal = ref(false);
-        
-        // 显示/隐藏弹窗方法
-        const toggleRegisterModal = (show) => {
-            showRegisterModal.value = show;
-        };
-        
-        // 注册表单
-        const registerForm = reactive({
-            appName: '',
-            host: '',
-            port: '',
-            jvmName: '',
-            jvmVersion: '',
-            startTime: ''
-        });
         
         let ws = null;
         let charts = {};
@@ -145,43 +129,6 @@ const app = createApp({
             
             return list;
         });
-        
-        // 注册应用
-        const registerApp = async () => {
-            try {
-                const startTime = registerForm.startTime 
-                    ? new Date(registerForm.startTime).getTime() 
-                    : Date.now();
-                
-                await fetch('/api/apps/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        appName: registerForm.appName,
-                        host: registerForm.host,
-                        port: parseInt(registerForm.port),
-                        jvmName: registerForm.jvmName,
-                        jvmVersion: registerForm.jvmVersion,
-                        startTime: startTime
-                    })
-                });
-                
-                // 重置表单
-                registerForm.appName = '';
-                registerForm.host = '';
-                registerForm.port = '';
-                registerForm.jvmName = '';
-                registerForm.jvmVersion = '';
-                registerForm.startTime = '';
-                toggleRegisterModal(false);
-                
-                // 刷新列表
-                loadApps();
-            } catch (e) {
-                console.error('Failed to register app:', e);
-                alert('注册失败：' + e.message);
-            }
-        };
         
         // 下线应用
         const offlineApp = async (app) => {
@@ -548,7 +495,6 @@ const app = createApp({
         
         // 定时任务
         let timeInterval;
-        let keyHandler;
         
         onMounted(() => {
             applyTheme();
@@ -557,21 +503,11 @@ const app = createApp({
             connectWebSocket();
             updateTime();
             timeInterval = setInterval(updateTime, 1000);
-            
-            // ESC 键关闭弹窗
-            keyHandler = (e) => {
-                if (e.key === 'Escape') {
-                    toggleRegisterModal(false);
-                    showDrawer.value = false;
-                }
-            };
-            document.addEventListener('keydown', keyHandler);
         });
         
         onUnmounted(() => {
             if (ws) ws.close();
             if (timeInterval) clearInterval(timeInterval);
-            document.removeEventListener('keydown', keyHandler);
             Object.values(charts).forEach(chart => chart?.destroy());
         });
         
@@ -594,14 +530,10 @@ const app = createApp({
             currentTime,
             darkMode,
             showDrawer,
-            showRegisterModal,
-            toggleRegisterModal,
-            registerForm,
             suggestions,
             getAppName,
             getAppMetric,
             selectApp,
-            registerApp,
             offlineApp,
             heartbeatApp,
             acknowledgeAlert,
