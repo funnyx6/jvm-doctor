@@ -56,7 +56,7 @@
 
 ### 构建项目
 ```bash
-git clone https://gitee.com/funnyx6/jvm-doctor.git
+git clone https://gitee.com/darwin_west/jvm-doctor.git
 cd jvm-doctor
 mvn clean package -DskipTests
 ```
