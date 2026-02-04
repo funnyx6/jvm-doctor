@@ -66,7 +66,10 @@
             <section class="section detail-section" v-if="selectedApp">
                 <div class="section-header">
                     <h2>{{ selectedApp.appName }}</h2>
-                    <button class="btn-close" @click="selectedAppId = null">×</button>
+                    <div class="header-actions">
+                        <button class="btn-detail" @click="showDrawer = true">详情 →</button>
+                        <button class="btn-close" @click="selectedAppId = null">×</button>
+                    </div>
                 </div>
                 
                 <!-- 实时图表 -->
@@ -131,7 +134,128 @@
                         <div class="metric-value">{{ formatDuration(currentMetrics.uptime) }}</div>
                     </div>
                 </div>
+                
+                <!-- 性能建议 -->
+                <div class="suggestions-section" v-if="suggestions.length > 0">
+                    <div class="section-header">
+                        <h3>💡 性能建议</h3>
+                    </div>
+                    <div class="suggestions-list">
+                        <div v-for="(item, index) in suggestions" :key="index" 
+                             class="suggestion-item" :class="item.level">
+                            <div class="suggestion-icon">
+                                {{ item.level === 'critical' ? '🔴' : item.level === 'warning' ? '🟡' : '🟢' }}
+                            </div>
+                            <div class="suggestion-content">
+                                <div class="suggestion-title">{{ item.title }}</div>
+                                <div class="suggestion-desc">{{ item.desc }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
+            
+            <!-- 应用详情抽屉 -->
+            <div class="drawer-overlay" v-if="showDrawer" @click="showDrawer = false"></div>
+            <div class="drawer" :class="{ open: showDrawer }">
+                <div class="drawer-header">
+                    <h3>应用详情</h3>
+                    <button class="btn-close" @click="showDrawer = false">×</button>
+                </div>
+                <div class="drawer-content">
+                    <!-- 基本信息 -->
+                    <div class="drawer-section">
+                        <h4>基本信息</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="label">应用名称</span>
+                                <span class="value">{{ selectedApp?.appName }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">主机</span>
+                                <span class="value">{{ selectedApp?.host }}:{{ selectedApp?.port }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">JVM 版本</span>
+                                <span class="value">{{ selectedApp?.jvmVersion }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">启动时间</span>
+                                <span class="value">{{ formatDate(selectedApp?.startTime) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 内存详情 -->
+                    <div class="drawer-section">
+                        <h4>内存详情</h4>
+                        <div class="memory-pools">
+                            <div class="pool-item">
+                                <span class="pool-name">堆内存 (Heap)</span>
+                                <div class="pool-bar">
+                                    <div class="pool-used" :style="{ width: (currentMetrics.heapUsage * 100) + '%' }"></div>
+                                </div>
+                                <span class="pool-value">{{ formatBytes(currentMetrics.heapUsed) }} / {{ formatBytes(currentMetrics.heapMax) }}</span>
+                            </div>
+                            <div class="pool-item">
+                                <span class="pool-name">Metaspace</span>
+                                <div class="pool-bar">
+                                    <div class="pool-used" :style="{ width: (currentMetrics.metaspaceUsage * 100) + '%' }"></div>
+                                </div>
+                                <span class="pool-value">{{ formatBytes(currentMetrics.metaspaceUsed) }} / {{ formatBytes(currentMetrics.metaspaceMax || 0) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- GC 统计 -->
+                    <div class="drawer-section">
+                        <h4>GC 统计</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value">{{ currentMetrics.gcCount || 0 }}</span>
+                                <span class="stat-label">GC 次数</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">{{ formatDuration(currentMetrics.gcTime) }}</span>
+                                <span class="stat-label">GC 耗时</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">{{ currentMetrics.gcTime > 0 ? (currentMetrics.uptime / currentMetrics.gcTime).toFixed(0) : '-' }}</span>
+                                <span class="stat-label"> uptime/GC比率</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 线程统计 -->
+                    <div class="drawer-section">
+                        <h4>线程统计</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value">{{ currentMetrics.threadCount }}</span>
+                                <span class="stat-label">总线程数</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">{{ currentMetrics.daemonThreadCount }}</span>
+                                <span class="stat-label">守护线程</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">{{ currentMetrics.threadCount - currentMetrics.daemonThreadCount }}</span>
+                                <span class="stat-label">用户线程</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- JVM 参数 -->
+                    <div class="drawer-section">
+                        <h4>JVM 参数</h4>
+                        <div class="jvm-params">
+                            <code>-Xmx{{ formatBytes(currentMetrics.heapMax) }}</code>
+                            <code>-Xms{{ formatBytes(currentMetrics.heapMax * 0.5) }}</code>
+                            <code>-XX:MaxMetaspaceSize={{ formatBytes(currentMetrics.metaspaceMax || 268435456) }}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- 告警面板 -->
             <section class="section alerts-section">
