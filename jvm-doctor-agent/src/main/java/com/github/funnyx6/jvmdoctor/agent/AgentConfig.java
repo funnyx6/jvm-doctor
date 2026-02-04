@@ -1,5 +1,7 @@
 package com.github.funnyx6.jvmdoctor.agent;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.Properties;
 
 /**
@@ -124,7 +126,7 @@ public class AgentConfig {
                 }
             }
             if (appName == null || appName.isEmpty()) {
-                appName = "unknown-" + ProcessHandle.current().pid();
+                appName = "unknown-" + getCurrentPid();
             }
         }
         
@@ -153,6 +155,24 @@ public class AgentConfig {
     private static String getSystemProperty(String key, String defaultValue) {
         String value = System.getProperty(key);
         return (value != null && !value.isEmpty()) ? value : defaultValue;
+    }
+    
+    /**
+     * 获取当前进程 ID（JDK 8 兼容方式）
+     */
+    private static String getCurrentPid() {
+        try {
+            // JDK 8: 通过 RuntimeMXBean 获取
+            RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+            String name = runtimeBean.getName();
+            int atIndex = name.indexOf('@');
+            if (atIndex > 0) {
+                return name.substring(0, atIndex);
+            }
+        } catch (Exception e) {
+            // 忽略
+        }
+        return "0";
     }
     
     // Getters
