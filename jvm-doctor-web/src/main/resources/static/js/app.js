@@ -8,6 +8,7 @@ const app = createApp({
         const selectedAppId = ref(null);
         const wsConnected = ref(false);
         const currentTime = ref('');
+        const darkMode = ref(localStorage.getItem('jvm-doctor-theme') === 'dark');
         let ws = null;
         let charts = {};
         let metricsHistory = {};
@@ -18,6 +19,9 @@ const app = createApp({
             heapMax: 0,
             heapUsage: 0,
             nonheapUsed: 0,
+            metaspaceUsed: 0,
+            metaspaceMax: 0,
+            metaspaceUsage: 0,
             threadCount: 0,
             daemonThreadCount: 0,
             cpuUsage: 0,
@@ -122,6 +126,24 @@ const app = createApp({
             return 'normal';
         };
         
+        // 切换深色模式
+        const toggleTheme = () => {
+            darkMode.value = !darkMode.value;
+            localStorage.setItem('jvm-doctor-theme', darkMode.value ? 'dark' : 'light');
+            document.body.classList.toggle('dark-mode', darkMode.value);
+            // 重新初始化图表以应用新颜色
+            if (selectedAppId.value) {
+                nextTick(() => initCharts());
+            }
+        };
+        
+        // 应用保存的主题
+        const applyTheme = () => {
+            if (darkMode.value) {
+                document.body.classList.add('dark-mode');
+            }
+        };
+        
         // 加载应用列表
         const loadApps = async () => {
             try {
@@ -163,7 +185,7 @@ const app = createApp({
             const heapData = data.map(m => m.heapUsage ? m.heapUsage * 100 : 0);
             const cpuData = data.map(m => m.cpuUsage ? m.cpuUsage * 100 : 0);
             const threadData = data.map(m => m.threadCount || 0);
-            const gcData = data.map(m => m.gcCount || 0);
+            const metaspaceData = data.map(m => m.metaspaceUsage ? m.metaspaceUsage * 100 : 0);
             
             if (charts.heap) {
                 charts.heap.data.labels = labels;
@@ -180,20 +202,33 @@ const app = createApp({
                 charts.thread.data.datasets[0].data = threadData;
                 charts.thread.update('none');
             }
-            if (charts.gc) {
-                charts.gc.data.labels = labels;
-                charts.gc.data.datasets[0].data = gcData;
-                charts.gc.update('none');
+            if (charts.metaspace) {
+                charts.metaspace.data.labels = labels;
+                charts.metaspace.data.datasets[0].data = metaspaceData;
+                charts.metaspace.update('none');
             }
         };
         
         // 初始化图表
         const initCharts = () => {
+            const isDark = darkMode.value;
+            const gridColor = isDark ? '#374151' : '#f1f5f9';
+            const textColor = isDark ? '#9ca3af' : '#64748b';
+            
             const chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: isDark ? '#1f2937' : 'white',
+                        titleColor: isDark ? '#f3f4f6' : '#1a1a2e',
+                        bodyColor: isDark ? '#d1d5db' : '#64748b',
+                        borderColor: isDark ? '#374151' : '#e5e7eb',
+                        borderWidth: 1,
+                        padding: 8,
+                        displayColors: false
+                    }
                 },
                 scales: {
                     x: {
@@ -202,40 +237,48 @@ const app = createApp({
                     },
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#f1f5f9' }
+                        grid: { color: gridColor },
+                        ticks: { color: textColor }
                     }
                 },
                 elements: {
-                    point: { radius: 0 },
+                    point: { radius: 0, hoverRadius: 4 },
                     line: { tension: 0.4 }
                 },
                 animation: { duration: 0 }
             };
             
-            ['heap', 'cpu', 'thread', 'gc'].forEach(type => {
-                const canvas = document.getElementById(`${type}Chart`);
+            const chartTypes = [
+                { key: 'heap', label: '堆内存' },
+                { key: 'cpu', label: 'CPU' },
+                { key: 'thread', label: '线程' },
+                { key: 'metaspace', label: 'Metaspace' }
+            ];
+            
+            chartTypes.forEach(({ key }) => {
+                const canvas = document.getElementById(`${key}Chart`);
                 if (!canvas) return;
                 
                 const ctx = canvas.getContext('2d');
-                const color = {
+                const colors = {
                     heap: { bg: 'rgba(59, 130, 246, 0.2)', border: '#3b82f6' },
                     cpu: { bg: 'rgba(239, 68, 68, 0.2)', border: '#ef4444' },
                     thread: { bg: 'rgba(16, 185, 129, 0.2)', border: '#10b981' },
-                    gc: { bg: 'rgba(245, 158, 11, 0.2)', border: '#f59e0b' }
-                }[type];
+                    metaspace: { bg: 'rgba(168, 85, 247, 0.2)', border: '#a855f7' }
+                }[key];
                 
-                if (charts[type]) {
-                    charts[type].destroy();
+                if (charts[key]) {
+                    charts[key].destroy();
                 }
                 
-                charts[type] = new Chart(ctx, {
+                charts[key] = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: [],
                         datasets: [{
                             data: [],
-                            backgroundColor: color.bg,
-                            borderColor: color.border,
+                            backgroundColor: colors.bg,
+                            borderColor: colors.border,
                             fill: true,
                             borderWidth: 2
                         }]
@@ -288,6 +331,9 @@ const app = createApp({
                     heapUsed: data.heapUsed,
                     heapMax: data.heapMax,
                     heapUsage: data.heapUsage,
+                    metaspaceUsed: data.metaspaceUsed,
+                    metaspaceMax: data.metaspaceMax,
+                    metaspaceUsage: data.metaspaceUsage,
                     threadCount: data.threadCount,
                     cpuUsage: data.cpuUsage,
                     gcCount: data.gcCount
@@ -303,9 +349,13 @@ const app = createApp({
                         heapUsed: data.heapUsed,
                         heapMax: data.heapMax,
                         heapUsage: data.heapUsage,
+                        metaspaceUsed: data.metaspaceUsed,
+                        metaspaceMax: data.metaspaceMax,
+                        metaspaceUsage: data.metaspaceUsage,
                         threadCount: data.threadCount,
                         cpuUsage: data.cpuUsage,
-                        gcCount: data.gcCount
+                        gcCount: data.gcCount,
+                        gcTime: data.gcTime
                     });
                     updateCharts(metricsHistory[appId]);
                 }
@@ -324,6 +374,7 @@ const app = createApp({
         let timeInterval;
         
         onMounted(() => {
+            applyTheme();
             loadApps();
             loadAlerts();
             connectWebSocket();
@@ -354,6 +405,7 @@ const app = createApp({
             currentMetrics,
             wsConnected,
             currentTime,
+            darkMode,
             getAppName,
             getAppMetric,
             selectApp,
@@ -362,7 +414,8 @@ const app = createApp({
             formatDuration,
             formatTime,
             formatUptime,
-            getUsageClass
+            getUsageClass,
+            toggleTheme
         };
     }
 });

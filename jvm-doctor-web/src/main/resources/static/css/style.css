@@ -10,6 +10,12 @@ body {
     background: #f5f7fa;
     color: #333;
     line-height: 1.6;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode {
+    background: #0f172a;
+    color: #e2e8f0;
 }
 
 #app {
@@ -42,6 +48,22 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
+}
+
+.btn-theme {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+}
+
+.btn-theme:hover {
+    background: rgba(255,255,255,0.25);
+    transform: scale(1.05);
 }
 
 .connection-status {
@@ -82,6 +104,11 @@ body {
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     overflow: hidden;
+    transition: background-color 0.3s;
+}
+
+body.dark-mode .section {
+    background: #1e293b;
 }
 
 .section-header {
@@ -90,12 +117,22 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: border-color 0.3s;
+}
+
+body.dark-mode .section-header {
+    border-color: #334155;
 }
 
 .section-header h2 {
     font-size: 16px;
     font-weight: 600;
     color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .section-header h2 {
+    color: #f1f5f9;
 }
 
 .badge {
@@ -139,9 +176,17 @@ body {
     background: #f8fafc;
 }
 
+body.dark-mode .app-card:hover {
+    background: #334155;
+}
+
 .app-card.active {
     background: #eff6ff;
     border-color: #3b82f6;
+}
+
+body.dark-mode .app-card.active {
+    background: #1e3a5f;
 }
 
 .app-status {
@@ -170,11 +215,21 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color 0.3s;
+}
+
+body.dark-mode .app-info h3 {
+    color: #f1f5f9;
 }
 
 .app-info p {
     font-size: 12px;
     color: #64748b;
+    transition: color 0.3s;
+}
+
+body.dark-mode .app-info p {
+    color: #94a3b8;
 }
 
 .app-meta {
@@ -203,6 +258,11 @@ body {
 .app-metrics .value {
     font-weight: 600;
     color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .app-metrics .value {
+    color: #e2e8f0;
 }
 
 /* 详情面板 */
@@ -239,12 +299,22 @@ body {
     background: #f8fafc;
     border-radius: 8px;
     padding: 16px;
+    transition: background-color 0.3s;
+}
+
+body.dark-mode .chart-card {
+    background: #334155;
 }
 
 .chart-card h3 {
     font-size: 13px;
     color: #64748b;
     margin-bottom: 12px;
+    transition: color 0.3s;
+}
+
+body.dark-mode .chart-card h3 {
+    color: #94a3b8;
 }
 
 .chart-card canvas {
@@ -264,18 +334,33 @@ body {
     border-radius: 8px;
     padding: 16px;
     text-align: center;
+    transition: background-color 0.3s;
+}
+
+body.dark-mode .metric-card {
+    background: #334155;
 }
 
 .metric-card h4 {
     font-size: 12px;
     color: #64748b;
     margin-bottom: 8px;
+    transition: color 0.3s;
+}
+
+body.dark-mode .metric-card h4 {
+    color: #94a3b8;
 }
 
 .metric-value {
     font-size: 20px;
     font-weight: 600;
     color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .metric-value {
+    color: #f1f5f9;
 }
 
 .metric-sub {
@@ -290,6 +375,10 @@ body {
     border-radius: 3px;
     margin-top: 8px;
     overflow: hidden;
+}
+
+body.dark-mode .progress-bar {
+    background: #475569;
 }
 
 .progress {
@@ -328,6 +417,11 @@ body {
     border-radius: 8px;
     margin-bottom: 8px;
     background: #f8fafc;
+    transition: background-color 0.3s;
+}
+
+body.dark-mode .alert-item {
+    background: #334155;
 }
 
 .alert-item.critical {
@@ -335,14 +429,26 @@ body {
     border-left: 3px solid #ef4444;
 }
 
+body.dark-mode .alert-item.critical {
+    background: #450a0a;
+}
+
 .alert-item.warning {
     background: #fffbeb;
     border-left: 3px solid #f59e0b;
 }
 
+body.dark-mode .alert-item.warning {
+    background: #451a03;
+}
+
 .alert-item.info {
     background: #eff6ff;
     border-left: 3px solid #3b82f6;
+}
+
+body.dark-mode .alert-item.info {
+    background: #172554;
 }
 
 .alert-icon {
@@ -359,12 +465,22 @@ body {
     font-size: 13px;
     font-weight: 600;
     color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .alert-title {
+    color: #f1f5f9;
 }
 
 .alert-msg {
     font-size: 12px;
     color: #64748b;
     margin-top: 2px;
+    transition: color 0.3s;
+}
+
+body.dark-mode .alert-msg {
+    color: #d1d5db;
 }
 
 .alert-meta {

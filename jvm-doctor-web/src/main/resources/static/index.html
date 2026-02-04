@@ -16,6 +16,9 @@
                 <span class="subtitle">JVM 监控平台</span>
             </div>
             <div class="header-right">
+                <button class="btn-theme" @click="toggleTheme" :title="darkMode ? '切换亮色模式' : '切换深色模式'">
+                    {{ darkMode ? '☀️' : '🌙' }}
+                </button>
                 <span class="connection-status" :class="wsConnected ? 'online' : 'offline'">
                     {{ wsConnected ? '● 在线' : '○ 离线' }}
                 </span>
@@ -83,8 +86,8 @@
                         <canvas id="threadChart"></canvas>
                     </div>
                     <div class="chart-card">
-                        <h3>GC 次数</h3>
-                        <canvas id="gcChart"></canvas>
+                        <h3>Metaspace 使用</h3>
+                        <canvas id="metaspaceChart"></canvas>
                     </div>
                 </div>
                 
@@ -101,21 +104,27 @@
                         </div>
                     </div>
                     <div class="metric-card">
-                        <h4>非堆内存</h4>
-                        <div class="metric-value">{{ formatBytes(currentMetrics.nonheapUsed) }}</div>
+                        <h4>Metaspace</h4>
+                        <div class="metric-value">
+                            {{ formatBytes(currentMetrics.metaspaceUsed) }} / {{ formatBytes(currentMetrics.metaspaceMax || 0) }}
+                        </div>
+                        <div class="metric-sub" v-if="currentMetrics.metaspaceUsage">
+                            {{ (currentMetrics.metaspaceUsage * 100).toFixed(1) }}% 使用率
+                        </div>
                     </div>
                     <div class="metric-card">
                         <h4>线程数</h4>
                         <div class="metric-value">{{ currentMetrics.threadCount }}</div>
-                        <div class="metric-sub">{{ currentMetrics.daemonThreadCount }} 守护线程</div>
+                        <div class="metric-sub">{{ currentMetrics.daemonThreadCount }} 守护</div>
                     </div>
                     <div class="metric-card">
                         <h4>CPU 使用率</h4>
                         <div class="metric-value">{{ (currentMetrics.cpuUsage * 100).toFixed(1) }}%</div>
                     </div>
                     <div class="metric-card">
-                        <h4>系统负载</h4>
-                        <div class="metric-value">{{ currentMetrics.systemLoad?.toFixed(2) || '-' }}</div>
+                        <h4>GC 次数</h4>
+                        <div class="metric-value">{{ currentMetrics.gcCount || 0 }}</div>
+                        <div class="metric-sub">{{ formatDuration(currentMetrics.gcTime) }} GC时间</div>
                     </div>
                     <div class="metric-card">
                         <h4>运行时长</h4>
