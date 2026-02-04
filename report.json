@@ -1,0 +1,28 @@
+{
+  "timestamp" : 1770191274910,
+  "pid" : 1381071,
+  "jvmName" : "OpenJDK 64-Bit Server VM",
+  "jvmVersion" : "17.0.17-ga+1",
+  "uptime" : 382,
+  "metrics" : {
+    "heap.committed" : 62914560,
+    "thread.daemon" : 5,
+    "heap.used" : 5013048,
+    "gc.G1_Old_Generation.time" : 0,
+    "gc.G1_Old_Generation.count" : 0,
+    "thread.peak" : 6,
+    "thread.count" : 6,
+    "gc.G1_Young_Generation.time" : 4,
+    "gc.G1_Young_Generation.count" : 2,
+    "system.load" : 0.66552734375,
+    "thread.deadlock" : 0,
+    "uptime" : 382,
+    "jvm.name" : "OpenJDK 64-Bit Server VM",
+    "jvm.version" : "17.0.17-ga+1",
+    "heap.max" : 941621248,
+    "cpu.cores" : 2,
+    "heap.usage" : 0.005323847577407259,
+    "nonheap.used" : 9187704,
+    "nonheap.committed" : 14680064
+  }
+}
