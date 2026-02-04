@@ -79,83 +79,244 @@
                     </div>
                 </div>
                 
-                <!-- 实时图表 -->
-                <div class="charts-row">
-                    <div class="chart-card">
-                        <h3>堆内存使用率</h3>
-                        <canvas id="heapChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>CPU 使用率</h3>
-                        <canvas id="cpuChart"></canvas>
-                    </div>
-                </div>
-                <div class="charts-row">
-                    <div class="chart-card">
-                        <h3>线程数</h3>
-                        <canvas id="threadChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Metaspace 使用</h3>
-                        <canvas id="metaspaceChart"></canvas>
-                    </div>
+                <!-- 标签页 -->
+                <div class="tabs">
+                    <button class="tab" :class="{ active: activeTab === 'metrics' }" @click="activeTab = 'metrics'">监控</button>
+                    <button class="tab" :class="{ active: activeTab === 'threads' }" @click="activeTab = 'threads'; loadThreads()">线程</button>
                 </div>
                 
-                <!-- 实时指标 -->
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <h4>堆内存</h4>
-                        <div class="metric-value">
-                            {{ formatBytes(currentMetrics.heapUsed) }} / {{ formatBytes(currentMetrics.heapMax) }}
+                <!-- 监控视图 -->
+                <div v-if="activeTab === 'metrics'">
+                    <!-- 实时图表 -->
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <h3>堆内存使用率</h3>
+                            <canvas id="heapChart"></canvas>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress" :style="{ width: (currentMetrics.heapUsage * 100) + '%' }"
-                                 :class="getUsageClass(currentMetrics.heapUsage)"></div>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <h4>Metaspace</h4>
-                        <div class="metric-value">
-                            {{ formatBytes(currentMetrics.metaspaceUsed) }} / {{ formatBytes(currentMetrics.metaspaceMax || 0) }}
-                        </div>
-                        <div class="metric-sub" v-if="currentMetrics.metaspaceUsage">
-                            {{ (currentMetrics.metaspaceUsage * 100).toFixed(1) }}% 使用率
+                        <div class="chart-card">
+                            <h3>CPU 使用率</h3>
+                            <canvas id="cpuChart"></canvas>
                         </div>
                     </div>
-                    <div class="metric-card">
-                        <h4>线程数</h4>
-                        <div class="metric-value">{{ currentMetrics.threadCount }}</div>
-                        <div class="metric-sub">{{ currentMetrics.daemonThreadCount }} 守护</div>
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <h3>线程数</h3>
+                            <canvas id="threadChart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Metaspace 使用</h3>
+                            <canvas id="metaspaceChart"></canvas>
+                        </div>
                     </div>
-                    <div class="metric-card">
-                        <h4>CPU 使用率</h4>
-                        <div class="metric-value">{{ (currentMetrics.cpuUsage * 100).toFixed(1) }}%</div>
-                    </div>
-                    <div class="metric-card">
-                        <h4>GC 次数</h4>
-                        <div class="metric-value">{{ currentMetrics.gcCount || 0 }}</div>
-                        <div class="metric-sub">{{ formatDuration(currentMetrics.gcTime) }} GC时间</div>
-                    </div>
-                    <div class="metric-card">
-                        <h4>运行时长</h4>
-                        <div class="metric-value">{{ formatDuration(currentMetrics.uptime) }}</div>
-                    </div>
-                </div>
-                
-                <!-- 性能建议 -->
-                <div class="suggestions-section" v-if="suggestions.length > 0">
-                    <div class="section-header">
-                        <h3>💡 性能建议</h3>
-                    </div>
-                    <div class="suggestions-list">
-                        <div v-for="(item, index) in suggestions" :key="index" 
-                             class="suggestion-item" :class="item.level">
-                            <div class="suggestion-icon">
-                                {{ item.level === 'critical' ? '🔴' : item.level === 'warning' ? '🟡' : '🟢' }}
+                    
+                    <!-- 实时指标 -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <h4>堆内存</h4>
+                            <div class="metric-value">
+                                {{ formatBytes(currentMetrics.heapUsed) }} / {{ formatBytes(currentMetrics.heapMax) }}
                             </div>
-                            <div class="suggestion-content">
-                                <div class="suggestion-title">{{ item.title }}</div>
-                                <div class="suggestion-desc">{{ item.desc }}</div>
+                            <div class="progress-bar">
+                                <div class="progress" :style="{ width: (currentMetrics.heapUsage * 100) + '%' }"
+                                     :class="getUsageClass(currentMetrics.heapUsage)"></div>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Metaspace</h4>
+                            <div class="metric-value">
+                                {{ formatBytes(currentMetrics.metaspaceUsed) }} / {{ formatBytes(currentMetrics.metaspaceMax || 0) }}
+                            </div>
+                            <div class="metric-sub" v-if="currentMetrics.metaspaceUsage">
+                                {{ (currentMetrics.metaspaceUsage * 100).toFixed(1) }}% 使用率
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>线程数</h4>
+                            <div class="metric-value">{{ currentMetrics.threadCount }}</div>
+                            <div class="metric-sub">{{ currentMetrics.daemonThreadCount }} 守护</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>CPU 使用率</h4>
+                            <div class="metric-value">{{ (currentMetrics.cpuUsage * 100).toFixed(1) }}%</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>GC 次数</h4>
+                            <div class="metric-value">{{ currentMetrics.gcCount || 0 }}</div>
+                            <div class="metric-sub">{{ formatDuration(currentMetrics.gcTime) }} GC时间</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>运行时长</h4>
+                            <div class="metric-value">{{ formatDuration(currentMetrics.uptime) }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 性能建议 -->
+                    <div class="suggestions-section" v-if="suggestions.length > 0">
+                        <div class="section-header">
+                            <h3>💡 性能建议</h3>
+                        </div>
+                        <div class="suggestions-list">
+                            <div v-for="(item, index) in suggestions" :key="index" 
+                                 class="suggestion-item" :class="item.level">
+                                <div class="suggestion-icon">
+                                    {{ item.level === 'critical' ? '🔴' : item.level === 'warning' ? '🟡' : '🟢' }}
+                                </div>
+                                <div class="suggestion-content">
+                                    <div class="suggestion-title">{{ item.title }}</div>
+                                    <div class="suggestion-desc">{{ item.desc }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 线程视图 -->
+                <div v-if="activeTab === 'threads'" class="thread-view">
+                    <!-- 线程统计 -->
+                    <div class="thread-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ threadData.totalCount || 0 }}</span>
+                            <span class="stat-label">总线程数</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" :class="threadData.deadlockCount > 0 ? 'text-danger' : ''">{{ threadData.deadlockCount || 0 }}</span>
+                            <span class="stat-label">死锁线程</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ threadData.runnableCount || 0 }}</span>
+                            <span class="stat-label">运行中</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ threadData.waitingCount || 0 }}</span>
+                            <span class="stat-label">等待中</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ threadData.timedWaitingCount || 0 }}</span>
+                            <span class="stat-label">定时等待</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 刷新按钮 -->
+                    <div class="thread-actions">
+                        <button class="btn-primary" @click="loadThreads" :disabled="loadingThreads">
+                            {{ loadingThreads ? '加载中...' : '刷新' }}
+                        </button>
+                        <span class="thread-time" v-if="threadData.timestamp">更新时间：{{ formatTime(threadData.timestamp) }}</span>
+                    </div>
+                    
+                    <!-- CPU Top 线程 -->
+                    <div class="thread-section">
+                        <h3>🔥 CPU 占用 Top 10</h3>
+                        <div class="thread-list top-list">
+                            <div v-for="(thread, index) in threadData.topThreads" :key="thread.threadId" 
+                                 class="thread-item" :class="{ selected: selectedThreadId === thread.threadId }"
+                                 @click="selectThread(thread)">
+                                <div class="thread-rank">{{ index + 1 }}</div>
+                                <div class="thread-info">
+                                    <div class="thread-name">{{ thread.name }}</div>
+                                    <div class="thread-meta">
+                                        <span class="state-badge" :class="getStateClass(thread.state)">{{ thread.state }}</span>
+                                        <span class="cpu-time">{{ formatCpuTime(thread.cpuTimeMillis) }}</span>
+                                    </div>
+                                </div>
+                                <div class="thread-cpu">
+                                    <div class="cpu-bar">
+                                        <div class="cpu-used" :style="{ width: getCpuPercent(thread) + '%' }"></div>
+                                    </div>
+                                    <span class="cpu-percent">{{ getCpuPercent(thread).toFixed(1) }}%</span>
+                                </div>
+                            </div>
+                            <div v-if="!threadData.topThreads || threadData.topThreads.length === 0" class="empty-state">
+                                <p>暂无线程数据</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 线程详情 -->
+                    <div class="thread-section" v-if="selectedThread">
+                        <h3>📋 线程详情</h3>
+                        <div class="thread-detail">
+                            <div class="detail-header">
+                                <div class="detail-title">
+                                    <span class="state-badge large" :class="getStateClass(selectedThread.state)">{{ selectedThread.state }}</span>
+                                    <span class="thread-name">{{ selectedThread.name }}</span>
+                                    <span class="thread-id">#{{ selectedThread.threadId }}</span>
+                                </div>
+                                <button class="btn-close" @click="selectedThreadId = null">×</button>
+                            </div>
+                            <div class="detail-info">
+                                <div class="info-row">
+                                    <span class="label">CPU 时间</span>
+                                    <span class="value">{{ formatCpuTime(selectedThread.cpuTimeMillis) }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">优先级</span>
+                                    <span class="value">{{ selectedThread.priority }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">守护线程</span>
+                                    <span class="value">{{ selectedThread.daemon ? '是' : '否' }}</span>
+                                </div>
+                                <div class="info-row" v-if="selectedThread.lockOwnerName">
+                                    <span class="label">锁持有者</span>
+                                    <span class="value">{{ selectedThread.lockOwnerName }} (#{{ selectedThread.lockOwnerId }})</span>
+                                </div>
+                                <div class="info-row" v-if="selectedThread.lockName">
+                                    <span class="label">等待锁</span>
+                                    <span class="value">{{ selectedThread.lockName }}</span>
+                                </div>
+                            </div>
+                            <!-- 堆栈 -->
+                            <div class="stack-trace" v-if="selectedThread.stackTrace && selectedThread.stackTrace.length > 0">
+                                <h4>堆栈信息</h4>
+                                <div class="stack-list">
+                                    <div v-for="(frame, idx) in selectedThread.stackTrace" :key="idx" class="stack-frame">
+                                        <span class="stack-class">{{ frame.className }}</span>
+                                        <span class="stack-method">{{ frame.methodName }}</span>
+                                        <span class="stack-location" v-if="frame.nativeMethod === 'true'">(Native Method)</span>
+                                        <span class="stack-location" v-else>{{ frame.fileName }}:{{ frame.lineNumber }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 死锁告警 -->
+                    <div class="alert-danger" v-if="threadData.deadlockCount > 0">
+                        <span class="alert-icon">⚠️</span>
+                        <span>检测到 {{ threadData.deadlockCount }} 个死锁线程！</span>
+                        <button class="btn-danger" @click="showDeadlocks = true">查看详情</button>
+                    </div>
+                    
+                    <!-- 死锁列表弹窗 -->
+                    <div class="modal-overlay" v-if="showDeadlocks" @click="showDeadlocks = false">
+                        <div class="modal large" @click.stop>
+                            <div class="modal-header">
+                                <h3>⚠️ 死锁线程</h3>
+                                <button class="btn-close" @click="showDeadlocks = false">×</button>
+                            </div>
+                            <div class="modal-body">
+                                <div v-for="(deadlock, idx) in threadData.deadlocks" :key="idx" class="deadlock-item">
+                                    <div class="deadlock-title">
+                                        <span class="state-badge danger">DEADLOCK</span>
+                                        <span class="thread-name">{{ deadlock.name }} (#{{ deadlock.threadId }})</span>
+                                    </div>
+                                    <div class="deadlock-info">
+                                        <span class="label">状态：</span><span>{{ deadlock.state }}</span>
+                                    </div>
+                                    <div class="deadlock-info">
+                                        <span class="label">等待锁：</span><span>{{ deadlock.lockName }}</span>
+                                    </div>
+                                    <div class="deadlock-info" v-if="deadlock.lockOwnerName">
+                                        <span class="label">持有锁：</span><span>{{ deadlock.lockOwnerName }}</span>
+                                    </div>
+                                    <div class="stack-trace small" v-if="deadlock.stackTrace">
+                                        <div v-for="(frame, fidx) in deadlock.stackTrace.slice(0, 5)" :key="fidx" class="stack-frame">
+                                            <span class="stack-class">{{ frame.className }}</span>
+                                            <span class="stack-method">{{ frame.methodName }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

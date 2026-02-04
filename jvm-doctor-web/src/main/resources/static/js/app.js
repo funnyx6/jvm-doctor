@@ -10,6 +10,24 @@ const app = createApp({
         const currentTime = ref('');
         const darkMode = ref(localStorage.getItem('jvm-doctor-theme') === 'dark');
         const showDrawer = ref(false);
+        const activeTab = ref('metrics');
+        
+        // 线程视图状态
+        const loadingThreads = ref(false);
+        const threadData = reactive({
+            threads: [],
+            topThreads: [],
+            deadlocks: [],
+            totalCount: 0,
+            deadlockCount: 0,
+            runnableCount: 0,
+            waitingCount: 0,
+            timedWaitingCount: 0,
+            timestamp: null
+        });
+        const selectedThreadId = ref(null);
+        const selectedThread = ref(null);
+        const showDeadlocks = ref(false);
         
         let ws = null;
         let charts = {};
@@ -177,9 +195,101 @@ const app = createApp({
         const selectApp = async (app) => {
             selectedAppId.value = app.id;
             showDrawer.value = false;
+            activeTab.value = 'metrics';
+            selectedThreadId.value = null;
+            selectedThread.value = null;
             await nextTick();
             initCharts();
             await loadMetricsHistory(app.id);
+        };
+        
+        // ========== 线程视图方法 ==========
+        
+        // 加载线程数据
+        const loadThreads = async () => {
+            if (!selectedAppId.value) return;
+            
+            loadingThreads.value = true;
+            try {
+                // 获取 CPU Top 线程
+                const topRes = await fetch(`/api/apps/${selectedAppId.value}/threads/top`);
+                const topData = await topRes.json();
+                
+                // 获取死锁线程
+                const deadlockRes = await fetch(`/api/apps/${selectedAppId.value}/deadlock`);
+                const deadlockData = await deadlockRes.json();
+                
+                // 更新线程统计
+                threadData.topThreads = topData.threads || [];
+                threadData.deadlocks = deadlockData.deadlocks || [];
+                threadData.deadlockCount = deadlockData.count || 0;
+                threadData.timestamp = Date.now();
+                
+                // 统计各状态线程数
+                threadData.runnableCount = 0;
+                threadData.waitingCount = 0;
+                threadData.timedWaitingCount = 0;
+                
+                if (topData.threads) {
+                    topData.threads.forEach(t => {
+                        if (t.state === 'RUNNABLE') threadData.runnableCount++;
+                        else if (t.state === 'WAITING') threadData.waitingCount++;
+                        else if (t.state === 'TIMED_WAITING') threadData.timedWaitingCount++;
+                    });
+                }
+                
+            } catch (e) {
+                console.error('Failed to load threads:', e);
+            } finally {
+                loadingThreads.value = false;
+            }
+        };
+        
+        // 选择线程查看详情
+        const selectThread = async (thread) => {
+            selectedThreadId.value = thread.threadId;
+            selectedThread.value = thread;
+            
+            // 如果堆栈为空，尝试获取
+            if (!thread.stackTrace || thread.stackTrace.length === 0) {
+                try {
+                    const res = await fetch(`/api/apps/${selectedAppId.value}/threads/${thread.threadId}/stack`);
+                    const data = await res.json();
+                    selectedThread.value = { ...thread, ...data };
+                } catch (e) {
+                    console.error('Failed to load thread stack:', e);
+                }
+            }
+        };
+        
+        // 获取状态样式类
+        const getStateClass = (state) => {
+            switch (state) {
+                case 'RUNNABLE': return 'runnable';
+                case 'BLOCKED': return 'blocked';
+                case 'WAITING': return 'waiting';
+                case 'TIMED_WAITING': return 'timed-waiting';
+                case 'NEW': return 'new';
+                case 'TERMINATED': return 'terminated';
+                default: return '';
+            }
+        };
+        
+        // 格式化 CPU 时间
+        const formatCpuTime = (ms) => {
+            if (!ms) return '0ms';
+            if (ms < 1000) return ms + 'ms';
+            if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
+            if (ms < 3600000) return (ms / 60000).toFixed(1) + 'm';
+            return (ms / 3600000).toFixed(1) + 'h';
+        };
+        
+        // 计算 CPU 百分比（相对于最大值）
+        const getCpuPercent = (thread) => {
+            if (!threadData.topThreads || threadData.topThreads.length === 0) return 0;
+            const maxCpu = threadData.topThreads[0].cpuTimeMillis || 1;
+            const cpu = thread.cpuTimeMillis || 0;
+            return (cpu / maxCpu) * 100;
         };
         
         // 确认告警
@@ -530,12 +640,23 @@ const app = createApp({
             currentTime,
             darkMode,
             showDrawer,
+            activeTab,
+            threadData,
+            loadingThreads,
+            selectedThreadId,
+            selectedThread,
+            showDeadlocks,
             suggestions,
             getAppName,
             getAppMetric,
             selectApp,
             offlineApp,
             heartbeatApp,
+            loadThreads,
+            selectThread,
+            getStateClass,
+            formatCpuTime,
+            getCpuPercent,
             acknowledgeAlert,
             formatBytes,
             formatDuration,
