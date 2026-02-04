@@ -10,6 +10,7 @@ import picocli.CommandLine.Parameters;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.lang.management.ManagementFactory;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -41,6 +42,10 @@ public class JvmDoctorCli implements Callable<Integer> {
                 description = "Output file for metrics (JSON format)")
         private File outputFile;
         
+        @Option(names = {"-p", "--pid"}, 
+                description = "Target JVM PID (default: current process)")
+        private Long pid;
+        
         @Override
         public Integer call() throws Exception {
             System.out.println("Starting JVM monitoring...");
@@ -49,7 +54,16 @@ public class JvmDoctorCli implements Callable<Integer> {
                 System.out.println("Duration: " + duration + " seconds");
             }
             
-            JvmMonitor monitor = new JvmMonitor();
+            // 如果指定了 PID，连接远程 JVM
+            JvmMonitor monitor;
+            if (pid != null && pid > 0) {
+                System.out.println("Target PID: " + pid);
+                monitor = new JvmMonitor(pid);
+            } else {
+                System.out.println("Target: current process (PID: " + ManagementFactory.getRuntimeMXBean().getName().split("@")[0] + ")");
+                monitor = new JvmMonitor();
+            }
+            
             ObjectMapper mapper = new ObjectMapper();
             final FileWriter[] writerRef = new FileWriter[1];
             

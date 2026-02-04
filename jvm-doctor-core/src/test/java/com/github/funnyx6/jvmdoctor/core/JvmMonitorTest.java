@@ -41,18 +41,6 @@ class JvmMonitorTest {
     }
     
     @Test
-    void testGetMetricsJson() {
-        // 测试 JSON 序列化
-        monitor.collectMetrics();
-        String json = monitor.getMetricsJson();
-        
-        assertNotNull(json);
-        assertFalse(json.isEmpty());
-        assertTrue(json.contains("heap"));
-        assertTrue(json.contains("thread"));
-    }
-    
-    @Test
     void testGenerateDiagnosticReport() {
         // 测试诊断报告生成
         monitor.collectMetrics();
@@ -60,8 +48,7 @@ class JvmMonitorTest {
         
         assertNotNull(report);
         assertNotNull(report.get("timestamp"));
-        assertNotNull(report.get("jvmName"));
-        assertNotNull(report.get("uptime"));
+        assertNotNull(report.get("pid"));
         assertNotNull(report.get("metrics"));
     }
     

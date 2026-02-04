@@ -65,19 +65,59 @@ mvn clean package -DskipTests
 
 ## 模式一：本地诊断（CLI）
 
-### 运行诊断
+### 命令列表
 ```bash
-# 监控本地 Java 进程
-java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor --pid 12345
-
-# 分析堆转储文件
-java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze --heap-dump heapdump.hprof
-
-# 生成诊断报告
-java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze -o report.html
-
-# 查看帮助
 java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar --help
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor --help
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze --help
+```
+
+### 监控命令
+```bash
+# 监控当前 JVM 进程（每5秒刷新）
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor
+
+# 指定刷新间隔（3秒）
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor -i 3
+
+# 指定监控时长（60秒后自动停止）
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor -d 60
+
+# 输出到文件（JSON格式）
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor -o metrics.json
+
+# 组合使用：3秒间隔、输出到文件
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor -i 3 -o metrics.json
+```
+
+### 监控其他 JVM 进程
+```bash
+# 监控指定 PID 的进程（需要 tools.jar）
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor -p 12345
+
+# 完整命令：PID + 间隔 + 输出
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar monitor -p 12345 -i 3 -o remote-metrics.json
+```
+
+> **注意**：监控其他进程需要目标 JVM 开启 JMX：
+> ```bash
+> java -Dcom.sun.management.jmxremote \
+>      -Dcom.sun.management.jmxremote.port=9010 \
+>      -Dcom.sun.management.jmxremote.ssl=false \
+>      -Dcom.sun.management.jmxremote.authenticate=false \
+>      -jar your-app.jar
+> ```
+
+### 分析命令
+```bash
+# 生成 JSON 报告
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze
+
+# 生成 HTML 报告
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze -f html -o report.html
+
+# 生成 TEXT 报告
+java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar analyze -f text -o report.txt
 ```
 
 ---
