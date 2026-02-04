@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MetricsService {
@@ -121,7 +122,7 @@ public class MetricsService {
         return apps.stream()
                 .map(app -> metricsRepository.findLatestByAppId(app.getId()))
                 .filter(m -> m != null)
-                .toList();
+                .collect(Collectors.toList());
     }
     
     /**
