@@ -32,7 +32,7 @@
                 <div class="section-header">
                     <h2>应用列表</h2>
                     <span class="badge">{{ runningApps.length }} 个运行中</span>
-                    <button class="btn-primary" @click="showRegisterModal = true">+ 手动注册</button>
+                    <button class="btn-primary" @click="toggleRegisterModal(true)">+ 手动注册</button>
                 </div>
                 <div class="apps-grid">
                     <div v-for="app in apps" :key="app.id" 
@@ -294,11 +294,11 @@
     </div>
     
     <!-- 手动注册弹窗 -->
-    <div class="modal-overlay" v-if="showRegisterModal" @click="showRegisterModal = false">
+    <div class="modal-overlay" v-if="showRegisterModal" @click="toggleRegisterModal(false)">
         <div class="modal" @click.stop>
             <div class="modal-header">
                 <h3>手动注册应用</h3>
-                <button class="btn-close" @click="showRegisterModal = false">×</button>
+                <button class="btn-close" @click="toggleRegisterModal(false)">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -331,7 +331,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-default" @click="showRegisterModal = false">取消</button>
+                <button class="btn-default" @click="toggleRegisterModal(false)">取消</button>
                 <button class="btn-primary" @click="registerApp" :disabled="!registerForm.appName || !registerForm.host || !registerForm.port">
                     注册
                 </button>

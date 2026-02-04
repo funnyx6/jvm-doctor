@@ -12,6 +12,11 @@ const app = createApp({
         const showDrawer = ref(false);
         const showRegisterModal = ref(false);
         
+        // 显示/隐藏弹窗方法
+        const toggleRegisterModal = (show) => {
+            toggleRegisterModal(false) = show;
+        };
+        
         // 注册表单
         const registerForm = reactive({
             appName: '',
@@ -168,7 +173,7 @@ const app = createApp({
                 registerForm.jvmName = '';
                 registerForm.jvmVersion = '';
                 registerForm.startTime = '';
-                showRegisterModal.value = false;
+                toggleRegisterModal(false) = false;
                 
                 // 刷新列表
                 loadApps();
@@ -556,7 +561,7 @@ const app = createApp({
             // ESC 键关闭弹窗
             keyHandler = (e) => {
                 if (e.key === 'Escape') {
-                    showRegisterModal.value = false;
+                    toggleRegisterModal(false) = false;
                     showDrawer.value = false;
                 }
             };
@@ -590,6 +595,7 @@ const app = createApp({
             darkMode,
             showDrawer,
             showRegisterModal,
+            toggleRegisterModal,
             registerForm,
             suggestions,
             getAppName,
