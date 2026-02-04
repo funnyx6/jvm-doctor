@@ -98,10 +98,14 @@ public class MetricsCollector {
      */
     private Double getCpuLoad() {
         try {
-            if (osMXBean instanceof com.sun.management.OperatingSystemMXBean) {
-                com.sun.management.OperatingSystemMXBean sunOsMXBean = 
-                    (com.sun.management.OperatingSystemMXBean) osMXBean;
-                return sunOsMXBean.getCpuLoad();
+            // 使用反射调用，避免 JDK 9+ 模块化问题
+            Class<?> sunOsClass = Class.forName("com.sun.management.OperatingSystemMXBean");
+            if (sunOsClass.isInstance(osMXBean)) {
+                java.lang.reflect.Method method = sunOsClass.getMethod("getCpuLoad");
+                Object result = method.invoke(osMXBean);
+                if (result instanceof Double) {
+                    return (Double) result;
+                }
             }
         } catch (Exception e) {
             // 忽略
