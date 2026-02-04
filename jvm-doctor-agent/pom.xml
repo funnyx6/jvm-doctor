@@ -33,17 +33,6 @@
     
     <build>
         <plugins>
-            <!-- JDK 8 需要 tools.jar，JDK 9+ 使用 jdk.attach 模块 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-            
             <!-- Agent JAR（用于 -javaagent 方式） -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
