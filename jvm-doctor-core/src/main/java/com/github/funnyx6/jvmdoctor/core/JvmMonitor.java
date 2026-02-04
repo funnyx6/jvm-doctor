@@ -291,6 +291,22 @@ public class JvmMonitor {
         report.put("timestamp", System.currentTimeMillis());
         report.put("pid", targetPid > 0 ? targetPid : getCurrentPid());
         
+        // 保留顶层字段（兼容旧代码）
+        if (lastMetrics.containsKey("jvm.name")) {
+            Object val = lastMetrics.get("jvm.name");
+            report.put("jvmName", val != null ? val.toString() : "");
+        }
+        if (lastMetrics.containsKey("jvm.version")) {
+            Object val = lastMetrics.get("jvm.version");
+            report.put("jvmVersion", val != null ? val.toString() : "");
+        }
+        if (lastMetrics.containsKey("uptime")) {
+            Object val = lastMetrics.get("uptime");
+            if (val instanceof Number) {
+                report.put("uptime", ((Number) val).longValue());
+            }
+        }
+        
         // 当前指标
         ObjectNode metricsNode = objectMapper.valueToTree(lastMetrics);
         report.set("metrics", metricsNode);
