@@ -66,7 +66,7 @@ public class ThreadInfoController {
      */
     private ResponseEntity<Map<String, Object>> getThreadInfo(Long appId, String path) {
         Optional<AppRegistry> appOpt = appRegistryService.getAppById(appId);
-        if (appOpt.isEmpty()) {
+        if (!appOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
         
