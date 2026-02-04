@@ -124,6 +124,29 @@ java -jar jvm-doctor-cli/target/jvm-doctor-cli-1.0.0-jar-with-dependencies.jar a
 
 ## 模式二：分布式监控（Server + Agent）
 
+### 快速接入
+
+**第一步：启动 Server**
+```bash
+java -jar jvm-doctor-web/target/jvm-doctor-web-1.0.0.jar
+```
+
+**第二步：启动应用并挂载 Agent**
+
+```bash
+# 基础用法（默认连接 localhost:8080）
+java -javaagent:jvm-doctor-agent.jar -jar your-app.jar
+
+# 自定义 Server 地址
+java -javaagent:jvm-doctor-agent.jar=server.url=http://your-server:8080 -jar your-app.jar
+```
+
+**第三步：访问监控平台**
+
+打开浏览器访问：`http://localhost:8080`
+
+---
+
 ### 1. 启动 Server
 
 ```bash
