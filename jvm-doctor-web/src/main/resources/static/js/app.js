@@ -14,7 +14,7 @@ const app = createApp({
         
         // 显示/隐藏弹窗方法
         const toggleRegisterModal = (show) => {
-            toggleRegisterModal(false) = show;
+            showRegisterModal.value = show;
         };
         
         // 注册表单
@@ -173,7 +173,7 @@ const app = createApp({
                 registerForm.jvmName = '';
                 registerForm.jvmVersion = '';
                 registerForm.startTime = '';
-                toggleRegisterModal(false) = false;
+                toggleRegisterModal(false);
                 
                 // 刷新列表
                 loadApps();
@@ -561,7 +561,7 @@ const app = createApp({
             // ESC 键关闭弹窗
             keyHandler = (e) => {
                 if (e.key === 'Escape') {
-                    toggleRegisterModal(false) = false;
+                    toggleRegisterModal(false);
                     showDrawer.value = false;
                 }
             };
