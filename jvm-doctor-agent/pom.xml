@@ -23,13 +23,6 @@
             <version>${project.version}</version>
         </dependency>
         
-        <!-- Java Agent API -->
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>1.14.16</version>
-        </dependency>
-        
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -40,6 +33,17 @@
     
     <build>
         <plugins>
+            <!-- JDK 8 需要 tools.jar，JDK 9+ 使用 jdk.attach 模块 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            
             <!-- Agent JAR（用于 -javaagent 方式） -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -76,6 +80,16 @@
                             </transformers>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <outputFile>target/jvm-doctor-agent-attach.jar</outputFile>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
