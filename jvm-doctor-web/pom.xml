@@ -54,11 +54,11 @@
             <version>3.42.0.0</version>
         </dependency>
         
-        <!-- Hibernate SQLite Dialect -->
+        <!-- Hibernate SQLite Dialect (Hibernate 5.x compatible) -->
         <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-community-dialects</artifactId>
-            <version>6.4.0.Final</version>
+            <groupId>com.github.gwenn</groupId>
+            <artifactId>sqlite-dialect</artifactId>
+            <version>0.1.2</version>
         </dependency>
         
         <!-- Testing -->
