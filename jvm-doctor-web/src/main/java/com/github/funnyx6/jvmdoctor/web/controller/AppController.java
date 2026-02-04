@@ -34,6 +34,7 @@ public class AppController {
         app.setJvmName(request.getJvmName());
         app.setJvmVersion(request.getJvmVersion());
         app.setStartTime(request.getStartTime());
+        app.setThreadServerPort(request.getThreadServerPort());
         
         AppRegistry saved = appRegistryService.register(app);
         

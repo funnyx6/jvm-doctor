@@ -13,6 +13,7 @@ public class AppRegisterRequest {
     private String jvmName;
     private String jvmVersion;
     private Long startTime;
+    private Integer threadServerPort;
     
     // Getters and Setters
     public String getAppName() { return appName; }
@@ -32,4 +33,7 @@ public class AppRegisterRequest {
     
     public Long getStartTime() { return startTime; }
     public void setStartTime(Long startTime) { this.startTime = startTime; }
+    
+    public Integer getThreadServerPort() { return threadServerPort; }
+    public void setThreadServerPort(Integer threadServerPort) { this.threadServerPort = threadServerPort; }
 }

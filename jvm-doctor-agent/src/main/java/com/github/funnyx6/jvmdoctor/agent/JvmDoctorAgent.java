@@ -40,6 +40,11 @@ public class JvmDoctorAgent {
             System.out.println("[JvmDoctorAgent] Server URL: " + config.getServerUrl());
             System.out.println("[JvmDoctorAgent] Report Interval: " + config.getReportInterval() + "s");
             
+            // 启动线程信息 HTTP 服务器
+            int threadPort = ThreadServer.start(0);
+            System.out.println("[JvmDoctorAgent] Thread server started on port " + threadPort);
+            config.setThreadServerPort(threadPort);
+            
             // 启动指标上报
             MetricsReporter.start(config);
             

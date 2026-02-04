@@ -41,6 +41,9 @@ public class AppRegistry {
     @Column(name = "last_heartbeat")
     private Long lastHeartbeat;
     
+    @Column(name = "thread_server_port")
+    private Integer threadServerPort;
+    
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -71,4 +74,7 @@ public class AppRegistry {
     
     public Long getLastHeartbeat() { return lastHeartbeat; }
     public void setLastHeartbeat(Long lastHeartbeat) { this.lastHeartbeat = lastHeartbeat; }
+    
+    public Integer getThreadServerPort() { return threadServerPort; }
+    public void setThreadServerPort(Integer threadServerPort) { this.threadServerPort = threadServerPort; }
 }

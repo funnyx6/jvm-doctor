@@ -20,6 +20,7 @@ public class AgentConfig {
     private String appName = "";
     private String appHost = "";
     private int appPort = 0;
+    private int threadServerPort = 0; // 线程服务器端口
     
     public AgentConfig() {
     }
@@ -181,6 +182,8 @@ public class AgentConfig {
     public String getAppName() { return appName; }
     public String getAppHost() { return appHost; }
     public int getAppPort() { return appPort; }
+    public int getThreadServerPort() { return threadServerPort; }
+    public void setThreadServerPort(int port) { this.threadServerPort = port; }
     
     @Override
     public String toString() {
@@ -190,6 +193,7 @@ public class AgentConfig {
                 ", appName='" + appName + '\'' +
                 ", appHost='" + appHost + '\'' +
                 ", appPort=" + appPort +
+                ", threadServerPort=" + threadServerPort +
                 '}';
     }
 }

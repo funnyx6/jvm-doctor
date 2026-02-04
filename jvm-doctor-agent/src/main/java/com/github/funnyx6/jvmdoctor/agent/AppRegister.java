@@ -37,6 +37,7 @@ public class AppRegister {
             requestBody.put("jvmName", System.getProperty("java.vm.name", "Unknown"));
             requestBody.put("jvmVersion", System.getProperty("java.version", "Unknown"));
             requestBody.put("startTime", System.currentTimeMillis());
+            requestBody.put("threadServerPort", config.getThreadServerPort());
             
             String json = toJson(requestBody);
             
