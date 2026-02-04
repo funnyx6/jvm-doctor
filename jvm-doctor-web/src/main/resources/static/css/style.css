@@ -270,6 +270,27 @@ body.dark-mode .app-metrics .value {
     padding-bottom: 20px;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-detail {
+    padding: 6px 12px;
+    border: none;
+    background: #6366f1;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.btn-detail:hover {
+    background: #4f46e5;
+}
+
 .btn-close {
     width: 28px;
     height: 28px;
@@ -553,4 +574,331 @@ body.dark-mode .alert-msg {
     .charts-row {
         grid-template-columns: 1fr;
     }
+}
+
+/* 性能建议 */
+.suggestions-section {
+    margin-top: 16px;
+    border-top: 1px solid #eee;
+    transition: border-color 0.3s;
+}
+
+body.dark-mode .suggestions-section {
+    border-color: #334155;
+}
+
+.suggestions-section .section-header {
+    border-bottom: none;
+    padding-bottom: 8px;
+}
+
+.suggestions-section .section-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .suggestions-section .section-header h3 {
+    color: #f1f5f9;
+}
+
+.suggestions-list {
+    padding: 0 16px 16px;
+}
+
+.suggestion-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: #f8fafc;
+    transition: background-color 0.3s;
+}
+
+body.dark-mode .suggestion-item {
+    background: #334155;
+}
+
+.suggestion-item.critical {
+    background: #fef2f2;
+    border-left: 3px solid #ef4444;
+}
+
+body.dark-mode .suggestion-item.critical {
+    background: #450a0a;
+}
+
+.suggestion-item.warning {
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+}
+
+body.dark-mode .suggestion-item.warning {
+    background: #451a03;
+}
+
+.suggestion-item.info {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+}
+
+body.dark-mode .suggestion-item.info {
+    background: #172554;
+}
+
+.suggestion-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.suggestion-content {
+    flex: 1;
+}
+
+.suggestion-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .suggestion-title {
+    color: #f1f5f9;
+}
+
+.suggestion-desc {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    transition: color 0.3s;
+}
+
+body.dark-mode .suggestion-desc {
+    color: #d1d5db;
+}
+
+/* 抽屉 */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.drawer {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    transition: right 0.3s ease, background-color 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+body.dark-mode .drawer {
+    background: #1e293b;
+}
+
+.drawer.open {
+    right: 0;
+}
+
+.drawer-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.3s;
+}
+
+body.dark-mode .drawer-header {
+    border-color: #334155;
+}
+
+.drawer-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    transition: color 0.3s;
+}
+
+body.dark-mode .drawer-header h3 {
+    color: #f1f5f9;
+}
+
+.drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.drawer-section {
+    margin-bottom: 24px;
+}
+
+.drawer-section h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    transition: color 0.3s, border-color 0.3s;
+}
+
+body.dark-mode .drawer-section h4 {
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+.info-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-item .label {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.info-item .value {
+    font-size: 13px;
+    color: #1a1a2e;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+body.dark-mode .info-item .value {
+    color: #e2e8f0;
+}
+
+.memory-pools {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pool-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pool-name {
+    font-size: 12px;
+    color: #64748b;
+    transition: color 0.3s;
+}
+
+body.dark-mode .pool-name {
+    color: #94a3b8;
+}
+
+.pool-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+body.dark-mode .pool-bar {
+    background: #475569;
+}
+
+.pool-used {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.pool-value {
+    font-size: 12px;
+    color: #64748b;
+    transition: color 0.3s;
+}
+
+body.dark-mode .pool-value {
+    color: #94a3b8;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+body.dark-mode .stat-item {
+    background: #334155;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    display: block;
+    transition: color 0.3s;
+}
+
+body.dark-mode .stat-value {
+    color: #f1f5f9;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 4px;
+    display: block;
+}
+
+.jvm-params {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.jvm-params code {
+    padding: 6px 10px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #475569;
+    font-family: 'SF Mono', Monaco, monospace;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode .jvm-params code {
+    background: #334155;
+    color: #e2e8f0;
 }

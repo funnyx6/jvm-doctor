@@ -9,6 +9,7 @@ const app = createApp({
         const wsConnected = ref(false);
         const currentTime = ref('');
         const darkMode = ref(localStorage.getItem('jvm-doctor-theme') === 'dark');
+        const showDrawer = ref(false);
         let ws = null;
         let charts = {};
         let metricsHistory = {};
@@ -36,6 +37,98 @@ const app = createApp({
         const unacknowledgedCount = computed(() => alerts.value.filter(a => !a.acknowledged).length);
         const selectedApp = computed(() => apps.value.find(a => a.id === selectedAppId.value));
         
+        // 性能建议
+        const suggestions = computed(() => {
+            const list = [];
+            const m = currentMetrics;
+            
+            // 堆内存建议
+            if (m.heapUsage >= 0.9) {
+                list.push({
+                    level: 'critical',
+                    title: '堆内存使用率过高',
+                    desc: `当前使用 ${(m.heapUsage * 100).toFixed(1)}%，建议增加堆内存或优化内存使用`
+                });
+            } else if (m.heapUsage >= 0.8) {
+                list.push({
+                    level: 'warning',
+                    title: '堆内存使用率偏高',
+                    desc: `当前使用 ${(m.heapUsage * 100).toFixed(1)}%，建议关注内存增长趋势`
+                });
+            } else if (m.heapUsage < 0.5 && m.heapMax > 0) {
+                list.push({
+                    level: 'info',
+                    title: '堆内存使用率偏低',
+                    desc: `当前使用 ${(m.heapUsage * 100).toFixed(1)}%，可考虑适当减少堆内存`
+                });
+            }
+            
+            // Metaspace 建议
+            if (m.metaspaceUsage >= 0.85) {
+                list.push({
+                    level: 'warning',
+                    title: 'Metaspace 使用率偏高',
+                    desc: `当前使用 ${(m.metaspaceUsage * 100).toFixed(1)}%，可能存在类加载过多问题`
+                });
+            }
+            
+            // GC 建议
+            if (m.gcCount > 100 && m.uptime > 3600000) {
+                list.push({
+                    level: 'warning',
+                    title: 'GC 频率较高',
+                    desc: `1小时内 GC ${m.gcCount} 次，建议优化对象创建或调整 GC 参数`
+                });
+            } else if (m.gcCount > 50 && m.uptime > 3600000) {
+                list.push({
+                    level: 'info',
+                    title: 'GC 频率适中',
+                    desc: `1小时内 GC ${m.gcCount} 次，建议持续关注`
+                });
+            }
+            
+            // 线程建议
+            if (m.threadCount > 500) {
+                list.push({
+                    level: 'warning',
+                    title: '线程数过多',
+                    desc: `当前 ${m.threadCount} 个线程，建议检查是否存在线程泄漏`
+                });
+            } else if (m.threadCount > 200) {
+                list.push({
+                    level: 'info',
+                    title: '线程数较多',
+                    desc: `当前 ${m.threadCount} 个线程，建议关注线程池配置`
+                });
+            }
+            
+            // CPU 建议
+            if (m.cpuUsage >= 0.9) {
+                list.push({
+                    level: 'critical',
+                    title: 'CPU 使用率过高',
+                    desc: `当前 ${(m.cpuUsage * 100).toFixed(1)}%，建议排查热点方法`
+                });
+            } else if (m.cpuUsage >= 0.8) {
+                list.push({
+                    level: 'warning',
+                    title: 'CPU 使用率偏高',
+                    desc: `当前 ${(m.cpuUsage * 100).toFixed(1)}%，建议关注`
+                });
+            }
+            
+            // 运行时长建议
+            if (m.uptime > 604800000 && m.gcCount > 200) {
+                list.push({
+                    level: 'info',
+                    title: '建议重启应用',
+                    desc: `已运行 ${formatDuration(m.uptime)}，GC 较频繁，可考虑重启清理`
+                });
+            }
+            
+            return list;
+        });
+        
         // 获取应用名称
         const getAppName = (appId) => {
             const app = apps.value.find(a => a.id === appId);
@@ -60,6 +153,7 @@ const app = createApp({
         // 选择应用
         const selectApp = async (app) => {
             selectedAppId.value = app.id;
+            showDrawer.value = false;
             await nextTick();
             initCharts();
             await loadMetricsHistory(app.id);
@@ -110,6 +204,12 @@ const app = createApp({
             if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
             if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
             return date.toLocaleString();
+        };
+        
+        // 格式化日期
+        const formatDate = (timestamp) => {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleString('zh-CN');
         };
         
         // 格式化启动时间
@@ -406,6 +506,8 @@ const app = createApp({
             wsConnected,
             currentTime,
             darkMode,
+            showDrawer,
+            suggestions,
             getAppName,
             getAppMetric,
             selectApp,
@@ -413,6 +515,7 @@ const app = createApp({
             formatBytes,
             formatDuration,
             formatTime,
+            formatDate,
             formatUptime,
             getUsageClass,
             toggleTheme
